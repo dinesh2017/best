@@ -7,6 +7,8 @@ const getCategories = asyncHandler(async (req, res) => {
     res.status(200).json(categories);
 })
 
+
+
 const getCategory = asyncHandler(async (req, res) => {
     const user = await Category.findById(req.params.id);
     if (!user) {
@@ -23,7 +25,7 @@ const createCategory = asyncHandler(async (req, res) => {
         res.status(400)
         throw new Error("Category name is required");
     }
-    const user = await Category.create({ name, createdBy: entity });
+    const user = await Category.create({ name, image: req.local.image , createdBy: entity });
     res.status(201).json(user);
 })
 

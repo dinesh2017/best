@@ -5,6 +5,7 @@ const connectDb = require("./config/dbConnection");
 const routes = require('./routes')
 const bodyParaser = require("body-parser");
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 
 connectDb.connect();
 
@@ -16,6 +17,8 @@ app.use(bodyParaser.json({ limit: '50mb' }));
 app.use(bodyParaser.urlencoded({ limit: '50mb', extended: true }))
 
 app.use(cors());
+
+app.use(fileUpload());
 
 app.use("/api/v1", routes)
 
