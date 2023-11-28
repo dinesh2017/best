@@ -1,21 +1,32 @@
 const express = require("express");
 const router = express.Router();
 const { fileUpload } = require("../services/upload.services");
-const multer = require('multer')
-
+// const imageLib = require("../utils/imageLib");
 const { validateToken } = require("../middleware/validateTokenHandler")
-
 const { getCategories, getCategory, createCategory, updateCategory, deleteCategory } = require("../controllers/category.controller");
+const multer = require('multer');
 
 router.use(validateToken)
 
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 },
-});
+const storage = multer.diskStorage({
+    destination (req, file, cb) {
+        cb(null, 'public/category');
+    },
+    filename (req, file, cb) {
+        let filename = file.originalname.replace(/\s+/g, '').trim()
+        filename = `${new Date().getTime()}_${filename}`
+        cb(null, filename)
+    }
+})
 
-router.route("/").get(getCategories).post(fileUpload, createCategory);
+const fileFilter = (req,file,cb) => {
+    cb(null, true);
+}
 
-router.route("/:id").get(getCategory).put(updateCategory).delete(deleteCategory);
+const upload = multer({storage: storage, fileFilter : fileFilter});
+
+router.route("/").get(getCategories).post(upload.single("image"), createCategory);
+
+router.route("/:id").get(getCategory).put(upload.single("image"),updateCategory).delete(deleteCategory);
 
 module.exports = router;

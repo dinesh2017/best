@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const { omitBy, isNil } = require('lodash');
 
 const storySchema = mongoose.Schema({
     name: {
@@ -9,17 +10,19 @@ const storySchema = mongoose.Schema({
     description: {
         type: String,
     },
-    Age: {
+    age: {
         type: String,
     },
     category: {
         type: Schema.Types.ObjectId,
         ref: "Category"
     },
-    tags: [{
-        type: Schema.Types.ObjectId,
-        ref: "Tags"
-    }],
+    tags: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Tags"
+        }
+    ],
     price: {
         type: Number,
     },
@@ -29,14 +32,74 @@ const storySchema = mongoose.Schema({
     },
     createdBy: {
         type: Schema.Types.ObjectId,
-        ref: "Admin"
+        ref: "User"
     },
     updatedBy: {
         type: Schema.Types.ObjectId,
-        ref: "Admin"
+        ref: "User"
     },
 }, {
     timestamps: true
 })
+
+storySchema.index({ name: 1 }, { unique: true });
+
+storySchema.method({
+    transform() {
+        const transformed = {};
+        const fields = ['id', 'name', 'description', 'age', 'price', 'image', 'category', 'tags', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
+
+        fields.forEach((field) => {
+            if (field == 'image')
+                transformed[field] = this[field]?.path;
+            else
+                transformed[field] = this[field];
+        });
+
+        return transformed;
+    },
+})
+
+storySchema.statics = {
+    async get(id) {
+        try {
+            let story;
+            if (mongoose.Types.ObjectId.isValid(id)) {
+                story = await this.findById(id).populate('createdBy updatedBy category tags', 'name').exec();
+            }
+            if (story) {
+                return story.transform();
+            }
+            throw new Error(
+                'Story does not exist',
+            );
+        } catch (error) {
+            throw new Error(error);
+        }
+    },
+
+    async list({ page = 1, perPage = 50, category, search }) {
+        let options = omitBy({category}, isNil);
+        if (search && search.length > 0) {
+            let queryArr = []
+            queryArr.push({ "name": { $regex: search, $options: 'i' } })
+            options = { $and: [options, { $or: queryArr }] }
+        }
+
+        let story = await this.find(options).populate('createdBy updatedBy category tags', 'name')
+            .sort({ seqNumber: 1 })
+            .skip(perPage * (page * 1 - 1))
+            .limit(perPage * 1)
+            .exec();
+        story = story.map(st => st.transform())
+        var count = await this.find(options).exec();
+        count = count.length;
+        var pages = Math.ceil(count / perPage);
+
+        return { story, count, pages }
+
+    },
+}
+
 
 module.exports = mongoose.model("Story", storySchema);

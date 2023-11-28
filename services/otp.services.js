@@ -33,8 +33,10 @@ exports.sendOtp = asyncHandler(async (req, res, next) => {
     let otp = await this.generate(4, {})
     let x = {
         mobileNumber: `${req.body.countryCode}${req.body.mobile}`,
-        otp: otp
+        otp: 1234
     }
+    console.log(x)
+    //otp
     const _otp = await OTP.create(x);
     req.locals = { otp: _otp.otp }
     return next();
@@ -58,21 +60,24 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
     var before5min = new Date();
     before5min.setTime(before5min.getTime() - (5 * 60 * 1000));
     console.log(before5min.toLocaleString())
-
-    OTP.findOne({ mobileNumber: `${req.body.countryCode}${req.body.mobile}`, otp: req.body.otp }, (err, data) => {
-        if (err) {
-            next(new APIErrorms({ message: err.message }))
-        } else if (data && data.createdAt < before5min) {
-            data.isExpired = true;
-            data.save()
+    try {
+        let data = await OTP.findOne({ mobileNumber: `${req.body.countryCode}${req.body.mobile}`, otp:req.body.otp })
+        console.log(data)
+        if (data && data.createdAt < before5min) {
+            await OTP.findByIdAndUpdate(data.id, { isExpired:true }, { new: true });
+            res.status(500);
             throw new Error(`OTP expired at ${data.createdAt.toLocaleString()}`)
         }
         else if (data && !data.isUsed) {
-            data.isUsed = true;
-            data.save()
-            return res.status(200).json({ success: true, verify: true, data: data })
+            await OTP.findByIdAndUpdate(data.id, { isUsed:true }, { new: true });
+            return res.status(200).json({ success: true, verify: true })
         } else {
             throw new Error(`OTP already used`)
         }
-    })
+
+    } catch (err) {
+        console.log(err)
+        throw new Error(err)
+    }
+
 })

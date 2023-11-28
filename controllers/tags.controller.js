@@ -3,43 +3,67 @@ const Tag = require("../models/tags.model");
 
 
 const getTags = asyncHandler(async (req, res) => {
-    const tags = await Tag.find()
-    res.status(200).json(tags);
+    try {
+        const tags = await Tag.list(req.query);
+        res.status(200).json(tags);
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
+    }
 })
 
 const getTag = asyncHandler(async (req, res) => {
-    const tags = await Tag.findById(req.params.id);
-    if(!tags){
-        res.status(404);
-        throw new Error("Tag not found")
+    try {
+        const tag = await Tag.get(req.params.id)
+        if (!tag) {
+            res.status(404);
+            throw new Error("Tag not found")
+        }
+        res.status(200).json(tag);
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
     }
-    res.status(200).json(tags);
 });
 
 const createTag = asyncHandler(async (req, res) => {
-    const { name } = req.body;
-    if (!name) {
-        res.status(400)
-        throw new Error("Tag name is required");
+    try {
+        const { name } = req.body;
+        let { entity } = req.user
+
+        if (!name) {
+            res.status(400)
+            throw new Error("Tag name is required");
+        }
+        const tag = await Tag.create({ name, createdBy: entity });
+        res.status(201).json(tag)
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
     }
-    const tags = await Tag.create({ name });
-    res.status(201).json(tags);
 })
 
 const updateTag = asyncHandler(async (req, res) => {
-    const tags = await Tag.findById(req.params.id);
-    if(!tags){
-        res.status(404);
-        throw new Error("Tag not found")
+    try {
+        const { name } = req.body;
+        let { entity } = req.user
+
+        if (!name) {
+            res.status(400)
+            throw new Error("Tag name is required");
+        }
+        const tag = await Tag.findByIdAndUpdate(req.params.id, { name, updatedBy: entity }, { new: true });
+        res.status(201).json(tag)
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
     }
-    const updatedTag = await Tag.findByIdAndUpdate(req.params.id, req.body, {new : true});
-    res.status(200).json(updatedTag);
 })
 
 const deleteTag = asyncHandler(async (req, res) => {
     const tags = await Tag.findById(req.params.id);
     console.log(tags)
-    if(!tags){
+    if (!tags) {
         res.status(404);
         throw new Error("Tag not found")
     }

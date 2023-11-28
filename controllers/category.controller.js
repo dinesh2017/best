@@ -3,45 +3,72 @@ const Category = require("../models/category.model");
 
 
 const getCategories = asyncHandler(async (req, res) => {
-    const categories = await Category.find()
-    res.status(200).json(categories);
+    try {
+        const categorys = await Category.list(req.query);
+        res.status(200).json(categorys);
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
+    }
 })
 
-
-
 const getCategory = asyncHandler(async (req, res) => {
-    const user = await Category.findById(req.params.id);
-    if (!user) {
-        res.status(404);
-        throw new Error("Category not found")
+    try {
+        const category = await Category.get(req.params.id)
+        if (!category) {
+            res.status(404);
+            throw new Error("Category not found")
+        }
+        res.status(200).json(category);
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
     }
-    res.status(200).json(user);
 });
 
 const createCategory = asyncHandler(async (req, res) => {
-    const { name } = req.body;
-    let { entity } = req.user
-    if (!name) {
-        res.status(400)
-        throw new Error("Category name is required");
+    try {
+        const { name } = req.body;
+        let { entity } = req.user
+        let image = "";
+        if (!name) {
+            res.status(400)
+            throw new Error("Category name is required");
+        }
+        if (req.file) {
+            //${req.protocol}://${req.get('host')}
+            const url = `/category/${req.file.filename}`;
+            image = { path: url, name: req.file.filename }
+        }
+        const user = await Category.create({ name, image, createdBy: entity });
+        res.status(201).json(user)
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
     }
-    const user = await Category.create({ name, image: req.local.image , createdBy: entity });
-    res.status(201).json(user);
+
 })
 
 const updateCategory = asyncHandler(async (req, res) => {
-    const user = await Category.findById(req.params.id);
-    if (!user) {
+    const category = await Category.findById(req.params.id);
+    if (!category) {
         res.status(404);
         throw new Error("Category not found")
     }
-    const updatedCategory = await Category.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { name } = req.body;
+    let { entity } = req.user
+    if (req.file) {
+        //${req.protocol}://${req.get('host')}
+        const url = `/category/${req.file.filename}`;
+        image = { path: url, name: req.file.filename }
+    }
+    let _category = { name, image, updatedBy: entity }
+    const updatedCategory = await Category.findByIdAndUpdate(req.params.id, _category, { new: true });
     res.status(200).json(updatedCategory);
 })
 
 const deleteCategory = asyncHandler(async (req, res) => {
     const user = await Category.findById(req.params.id);
-    console.log(user)
     if (!user) {
         res.status(404);
         throw new Error("Category not found")
@@ -49,5 +76,6 @@ const deleteCategory = asyncHandler(async (req, res) => {
     await Category.remove();
     res.status(200).json(user);
 })
+
 
 module.exports = { getCategories, getCategory, createCategory, updateCategory, deleteCategory }

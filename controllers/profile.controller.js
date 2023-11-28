@@ -3,27 +3,48 @@ const Profile = require("../models/profile.model");
 
 
 const getProfiles = asyncHandler(async (req, res) => {
-    const profile = await Profile.find()
-    res.status(200).json(profile);
+    try {
+        const profile = await Profile.list(req.query);
+        res.status(200).json(profile);
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
+    }
 })
 
 const getProfile = asyncHandler(async (req, res) => {
-    const profile = await Profile.findById(req.params.id);
-    if (!profile) {
-        res.status(404);
-        throw new Error("Profile not found")
+    try {
+        const profile = await Profile.get(req.params.id)
+        if (!profile) {
+            res.status(404);
+            throw new Error("Category not found")
+        }
+        res.status(200).json(profile);
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
     }
-    res.status(200).json(profile);
 });
 
 const createProfile = asyncHandler(async (req, res) => {
-    const { name } = req.body;
-    if (!name) {
-        res.status(400)
-        throw new Error("Profile name is required");
+    try {
+        const { name, gender, dob, age, } = req.body;
+        let { entity } = req.user
+        let image = "";
+        if (!name) {
+            res.status(400)
+            throw new Error("Profile name is required");
+        }
+        if (req.file) {
+            const url = `/profile/${req.file.filename}`;
+            picture = { path: url, name: req.file.filename }
+        }
+        const user = await Profile.create({ name, gender, dob, age, picture, createdBy: entity });
+        res.status(201).json(user)
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
     }
-    const profile = await Profile.create({ name });
-    res.status(201).json(profile);
 })
 
 const updateProfile = asyncHandler(async (req, res) => {
@@ -32,7 +53,14 @@ const updateProfile = asyncHandler(async (req, res) => {
         res.status(404);
         throw new Error("Profile not found")
     }
-    const updatedProfile = await Profile.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const { name, gender, dob, age, } = req.body;
+    let { entity } = req.user
+    if (req.file) {
+        const url = `/profile/${req.file.filename}`;
+        picture = { path: url, name: req.file.filename }
+    }
+    let _profile = { name, gender, dob, age, picture, updatedBy: entity }
+    const updatedProfile = await Profile.findByIdAndUpdate(req.params.id, _profile, { new: true });
     res.status(200).json(updatedProfile);
 })
 

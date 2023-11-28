@@ -5,11 +5,14 @@ const connectDb = require("./config/dbConnection");
 const routes = require('./routes')
 const bodyParaser = require("body-parser");
 const cors = require('cors');
-const fileUpload = require('express-fileupload');
+require("./config/initialFolders")
+const multer = require('multer');
 
 connectDb.connect();
 
 const app = express();
+
+app.use(express.static('public'));
 
 const port = process.env.PORT || 3000;
 
@@ -18,11 +21,12 @@ app.use(bodyParaser.urlencoded({ limit: '50mb', extended: true }))
 
 app.use(cors());
 
-app.use(fileUpload());
+
 
 app.use("/api/v1", routes)
 
 app.use(errorHandler);
+
 
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
