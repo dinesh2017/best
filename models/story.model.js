@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const Tags = require("./tags.model");
 const { omitBy, isNil } = require('lodash');
 
 const storySchema = mongoose.Schema({
@@ -78,12 +79,21 @@ storySchema.statics = {
         }
     },
 
-    async list({ page = 1, perPage = 50, category, search }) {
+    async list({ page = 1, perPage = 50, category,tags, search }) {
         let options = omitBy({category}, isNil);
         if (search && search.length > 0) {
             let queryArr = []
             queryArr.push({ "name": { $regex: search, $options: 'i' } })
             options = { $and: [options, { $or: queryArr }] }
+        }
+
+        if (tags && tags.length > 0) {
+            console.log(tags)
+            const tagObjects = await Tags.find({ name: { $in: tags } });
+    
+            const tagIds = tagObjects.map(tag => tag._id);
+    
+            options.tags = { $in: tagIds };
         }
 
         let story = await this.find(options).populate('createdBy updatedBy category tags', 'name')

@@ -2,8 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { fileUpload } = require("../services/upload.services");
 // const imageLib = require("../utils/imageLib");
-const { validateToken } = require("../middleware/validateTokenHandler")
 const { getCategories, getCategory, createCategory, updateCategory, deleteCategory } = require("../controllers/category.controller");
+const { validateToken } = require("../middleware/validateTokenHandler")
 const multer = require('multer');
 
 router.use(validateToken)

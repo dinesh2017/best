@@ -9,6 +9,7 @@ const coupanRoutes = require("./coupan.route");
 const profileRoutes = require("./profile.route");
 const authRoutes = require("./auth.route");
 const adminRoutes = require("./admin.route");
+const splashScreenRoutes = require("./splashscreen.route");
 const router = express.Router();
 
 router.use('/auth', authRoutes)
@@ -21,6 +22,7 @@ router.use('/subscription', subscriptionRoutes)
 router.use('/subscriber', subscriberRoutes)
 router.use('/coupan', coupanRoutes)
 router.use('/profile', profileRoutes)
+router.use('/splashscreen', splashScreenRoutes)
 
 
 module.exports = router;

@@ -1,9 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { getUsers, getUser, getUserInfo, uploadProfilePic, createUser, updateUser, deleteUser } = require("../controllers/user.controller");
-
+const { getSplashScreen, getSplashScreens, createSplashScreen, updateSplashScreen, deleteSplashScreen } = require("../controllers/splashscreen.controller");
 const { validateToken } = require("../middleware/validateTokenHandler")
-
 const multer = require('multer');
 
 router.use(validateToken)
@@ -25,12 +23,8 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-router.route('/userinfo').get(getUserInfo);
+router.route("/").get(getSplashScreens).post(upload.single("image"), createSplashScreen);
 
-router.route('/userinfo').post(upload.single("image"), uploadProfilePic);
-
-router.route("/").get(getUsers).post(createUser);
-
-router.route("/:id").get(getUser).put(updateUser).delete(deleteUser);
+router.route("/:id").get(getSplashScreen).put(upload.single("image"), updateSplashScreen).delete(deleteSplashScreen);
 
 module.exports = router;

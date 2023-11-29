@@ -1,20 +1,15 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const coupanSchema = mongoose.Schema({
+const splashScreenSchema = mongoose.Schema({
     name: {
         type: String,
+        required: [true, "Please add the category name"]
     },
-    discount: {
-        type: Number,
+    image: {
+        path: { type: String },
+        name: { type: String }
     },
-    expiry: {
-        type: Date,
-    },
-    story: [{
-        type: Schema.Types.ObjectId,
-        ref: "Story"
-    }],
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User"
@@ -27,12 +22,12 @@ const coupanSchema = mongoose.Schema({
     timestamps: true
 })
 
-coupanSchema.index({ name: 1 }, { unique: true });
+splashScreenSchema.index({ name: 1 }, { unique: true });
 
-coupanSchema.method({
+splashScreenSchema.method({
     transform() {
         const transformed = {};
-        const fields = ['id', 'name', 'discount', 'expiry', 'story', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
+        const fields = ['id', 'name', 'image', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
 
         fields.forEach((field) => {
             transformed[field] = this[field];
@@ -42,24 +37,24 @@ coupanSchema.method({
     },
 })
 
-coupanSchema.statics = {
+splashScreenSchema.statics = {
     /**
-      * Get Subscription Type
+      * Get splashScreen Type
       *
-      * @param {ObjectId} id - The objectId of CateSubscriptiongory Type.
-      * @returns {Promise<coupan, Error>}
+      * @param {ObjectId} id - The objectId of CatesplashScreengory Type.
+      * @returns {Promise<splashScreen, Error>}
       */
     async get(id) {
         try {
-            let coupan;
+            let splashScreen;
             if (mongoose.Types.ObjectId.isValid(id)) {
-                coupan = await this.findById(id).populate('createdBy updatedBy story', 'name').exec();
+                splashScreen = await this.findById(id).populate('createdBy updatedBy', 'name').exec();
             }
-            if (coupan) {
-                return coupan.transform();
+            if (splashScreen) {
+                return splashScreen.transform();
             }
             throw new Error(
-                'Coupan does not exist',
+                'splashScreen does not exist',
             );
         } catch (error) {
             throw new Error(error);
@@ -74,19 +69,19 @@ coupanSchema.statics = {
             options = { $and: [options, { $or: queryArr }] }
         }
 
-        let coupans = await this.find(options).populate('createdBy updatedBy', 'name')
+        let splashScreens = await this.find(options).populate('createdBy updatedBy', 'name')
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
             .limit(perPage * 1)
             .exec();
-        coupans = coupans.map(coupan => coupan.transform())
+        splashScreens = splashScreens.map(splashScreen => splashScreen.transform())
         var count = await this.find(options).exec();
         count = count.length;
         var pages = Math.ceil(count / perPage);
 
-        return { coupans, count, pages }
+        return { splashScreens, count, pages }
 
     },
 }
 
-module.exports = mongoose.model("Coupan", coupanSchema);
+module.exports = mongoose.model("splashScreen", splashScreenSchema);

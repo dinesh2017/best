@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const { getCoupans, getCoupan, createCoupan, updateCoupan, deleteCoupan } = require("../controllers/coupan.controller");
+const { validateToken } = require("../middleware/validateTokenHandler")
 
+router.use(validateToken)
 router.route("/").get(getCoupans).post(createCoupan);
 
 router.route("/:id").get(getCoupan).put(updateCoupan).delete(deleteCoupan);

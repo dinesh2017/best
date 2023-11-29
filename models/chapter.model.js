@@ -33,7 +33,7 @@ const chapterSchema = mongoose.Schema({
     timestamps: true
 })
 
-chapterSchema.index({ name: 1 }, { unique: true });
+chapterSchema.index({ name: 1 });
 chapterSchema.path('subscription').default(null);
 
 chapterSchema.method({

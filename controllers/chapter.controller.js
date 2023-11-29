@@ -31,6 +31,7 @@ const createChapter = asyncHandler(async (req, res) => {
         const { name, description, subscription, story } = req.body;
         let { entity } = req.user
         let { audioFile } = req.local;
+        console.log(req.local)
         if (!name) {
             res.status(400)
             throw new Error("All Fields required");

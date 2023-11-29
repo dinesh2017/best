@@ -7,9 +7,47 @@ const getUsers = asyncHandler(async (req, res) => {
     res.status(200).json(users);
 })
 
+const getUserInfo = asyncHandler(async (req, res) => {
+    try {
+        let { entity } = req.user
+        const user = await User.findById(entity);
+        if (!user) {
+            res.status(404);
+            throw new Error("User not found")
+        }
+        res.status(200).json(user);
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
+    }
+
+});
+
+const uploadProfilePic = asyncHandler(async (req, res) => {
+    try {
+        let { entity } = req.user
+        const user = await User.findById(entity);
+        if (!user) {
+            res.status(404);
+            throw new Error("User not found")
+        }
+        if (req.file) {
+            const url = `/profile/${req.file.filename}`;
+            image = { path: url, name: req.file.filename }
+        }
+        let _user = { picture: image, updatedBy: entity }
+        const updatedUser = await User.findByIdAndUpdate(entity, _user, { new: true });
+        res.status(200).json(updatedUser);
+    } catch (err) {
+        res.status(500);
+        throw new Error(err)
+    }
+
+});
+
 const getUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
-    if(!user){
+    if (!user) {
         res.status(404);
         throw new Error("User not found")
     }
@@ -28,18 +66,18 @@ const createUser = asyncHandler(async (req, res) => {
 
 const updateUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
-    if(!user){
+    if (!user) {
         res.status(404);
         throw new Error("User not found")
     }
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {new : true});
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json(updatedUser);
 })
 
 const deleteUser = asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
     console.log(user)
-    if(!user){
+    if (!user) {
         res.status(404);
         throw new Error("User not found")
     }
@@ -47,4 +85,4 @@ const deleteUser = asyncHandler(async (req, res) => {
     res.status(200).json(user);
 })
 
-module.exports = { getUsers, getUser, createUser, updateUser, deleteUser }
+module.exports = { getUsers, getUser, createUser, updateUser, deleteUser, getUserInfo, uploadProfilePic }

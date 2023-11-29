@@ -21,7 +21,8 @@ exports.audioUpload = async (req, res, next) => {
             }
         });
         const result = await upload.done();
-        req.local = { audioPath: { path: result.Location, name: fileName } }
+        req.local = { audioFile : { path: result.Location, name: fileName } }
+        
         next()
     }
     catch (err) {
