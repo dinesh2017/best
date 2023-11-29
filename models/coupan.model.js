@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const { omitBy, isNil } = require('lodash');
 
 const coupanSchema = mongoose.Schema({
     name: {
@@ -14,6 +15,10 @@ const coupanSchema = mongoose.Schema({
     story: [{
         type: Schema.Types.ObjectId,
         ref: "Story"
+    }],
+    subscription: [{
+        type: Schema.Types.ObjectId,
+        ref: "Subscription"
     }],
     createdBy: {
         type: Schema.Types.ObjectId,
@@ -53,7 +58,7 @@ coupanSchema.statics = {
         try {
             let coupan;
             if (mongoose.Types.ObjectId.isValid(id)) {
-                coupan = await this.findById(id).populate('createdBy updatedBy story', 'name').exec();
+                coupan = await this.findById(id).populate('createdBy updatedBy story subscription', 'name').exec();
             }
             if (coupan) {
                 return coupan.transform();
@@ -74,7 +79,7 @@ coupanSchema.statics = {
             options = { $and: [options, { $or: queryArr }] }
         }
 
-        let coupans = await this.find(options).populate('createdBy updatedBy', 'name')
+        let coupans = await this.find(options).populate('createdBy updatedBy story subscription', 'name')
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
             .limit(perPage * 1)

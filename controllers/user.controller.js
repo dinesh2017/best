@@ -26,6 +26,7 @@ const getUserInfo = asyncHandler(async (req, res) => {
 const uploadProfilePic = asyncHandler(async (req, res) => {
     try {
         let { entity } = req.user
+        
         const user = await User.findById(entity);
         if (!user) {
             res.status(404);

@@ -10,7 +10,7 @@ router.use(validateToken)
 
 const storage = multer.diskStorage({
     destination(req, file, cb) {
-        cb(null, 'public/splashscreen');
+        cb(null, 'public/profile');
     },
     filename(req, file, cb) {
         let filename = file.originalname.replace(/\s+/g, '').trim()
@@ -27,7 +27,7 @@ const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 router.route('/userinfo').get(getUserInfo);
 
-router.route('/userinfo').post(upload.single("image"), uploadProfilePic);
+router.route('/updateprofilepic').post(upload.single("image"), uploadProfilePic);
 
 router.route("/").get(getUsers).post(createUser);
 

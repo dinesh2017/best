@@ -58,17 +58,16 @@ const updateSubscription = asyncHandler(async (req, res) => {
 })
 
 const deleteSubscription = asyncHandler(async (req, res) => {
-    try {
+    try{
         const subscription = await Subscription.findById(req.params.id);
-        console.log(subscription)
         if (!subscription) {
             res.status(404);
-            throw new Error("Subscription not found")
+            throw new Error("Category not found")
         }
-        await Subscription.remove();
-        res.status(200).json(subscription);
-    } catch (err) {
-        res.status(500);
+        let _subscription = await Subscription.findByIdAndDelete(subscription.id)
+        res.status(200).json(_subscription);
+    }catch(err){
+        res.status(404);
         throw new Error(err)
     }
 })

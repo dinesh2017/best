@@ -66,17 +66,16 @@ const updateSplashScreen = asyncHandler(async (req, res) => {
 })
 
 const deleteSplashScreen = asyncHandler(async (req, res) => {
-    try {
-        const _splashscreen = await SplashScreen.findById(req.params.id);
-        console.log(_splashscreen)
-        if (!_splashscreen) {
+    try{
+        const splashScreen = await SplashScreen.findById(req.params.id);
+        if (!splashScreen) {
             res.status(404);
-            throw new Error("Subscription not found")
+            throw new Error("Category not found")
         }
-        await SplashScreen.remove();
-        res.status(200).json(_splashscreen);
-    } catch (err) {
-        res.status(500);
+        let _splashScreen = await SplashScreen.findByIdAndDelete(splashScreen.id)
+        res.status(200).json(_splashScreen);
+    }catch(err){
+        res.status(404);
         throw new Error(err)
     }
 })
