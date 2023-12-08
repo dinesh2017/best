@@ -5,11 +5,12 @@ const APIError = require('../utils/APIError');
 
 const getSubscriptions = asyncHandler(async (req, res, next) => {
     try {
-        const subscriptions = await Subscription.list(req.query);
+        const { subscriptions, count, pages } = await Subscription.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
             subscriptions: subscriptions,
+            count, pages
         });
     } catch (error) {
         next(new APIError(error));

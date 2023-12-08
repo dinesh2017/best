@@ -5,11 +5,11 @@ const APIError = require('../utils/APIError');
 
 const getChapters = asyncHandler(async (req, res, next) => {
     try {
-        const chapter = await Chapter.list(req.query);
+        const { chapters, count, pages } = await Chapter.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            chapters: chapter,
+            chapters, count, pages
         });
     } catch (error) {
         next(new APIError(error));

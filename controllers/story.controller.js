@@ -5,11 +5,12 @@ const APIError = require('../utils/APIError');
 
 const getStories = asyncHandler(async (req, res, next) => {
     try {
-        const story = await Story.list(req.query);
+        const { story, count, pages } = await Story.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
             stories: story,
+            count, pages
         });
     } catch (error) {
         next(new APIError(error));

@@ -5,11 +5,12 @@ const APIError = require('../utils/APIError');
 
 const getProfiles = asyncHandler(async (req, res, next) => {
     try {
-        const profile = await Profile.list(req.query);
+        const { profile, count, pages } = await Profile.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
             profiles: profile,
+            count, pages
         });
     } catch (error) {
         next(new APIError(error));

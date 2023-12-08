@@ -4,11 +4,12 @@ const Coupan = require("../models/coupan.model");
 
 const getCoupans = asyncHandler(async (req, res, next) => {
     try {
-        const coupans = await Coupan.list(req.query);
+        const { coupans, count, pages } = await Coupan.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
             coupans: coupans,
+            count, pages 
         });
     } catch (error) {
         next(new APIError(error));

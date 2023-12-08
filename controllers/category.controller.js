@@ -4,11 +4,12 @@ const APIError = require('../utils/APIError');
 
 const getCategories = asyncHandler(async (req, res, next) => {
     try {
-        const categories = await Category.list(req.query);
+        const { categorys, count, pages } = await Category.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            categories: categories,
+            categories: categorys,
+            count, pages
         });
     } catch (error) {
         next(new APIError(error));

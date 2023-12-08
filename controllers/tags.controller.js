@@ -4,14 +4,14 @@ const APIError = require('../utils/APIError');
 
 const getTags = asyncHandler(async (req, res,next) => {
     try {
-        const tags = await Tag.list(req.query);
+        const { tags, count, pages } = await Tag.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
             tags: tags,
+            count, pages
         });
     } catch (error) {
-        res.status(500);
         next(new APIError(error));
     }
 })

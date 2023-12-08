@@ -4,11 +4,13 @@ const APIError = require('../utils/APIError');
 
 const getSplashScreens = asyncHandler(async (req, res, next) => {
     try {
-        const splashscreen = await SplashScreen.list(req.query);
+        const { splashScreens, count, pages } = await SplashScreen.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            splashscreens: splashscreen,
+            splashScreens,
+            count,
+            pages
         });
     } catch (error) {
         next(new APIError(error));
@@ -24,6 +26,7 @@ const getSplashScreen = asyncHandler(async (req, res, next) => {
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
+            splashscreen
         });
     } catch (error) {
         next(new APIError(error));
