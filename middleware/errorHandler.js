@@ -1,29 +1,42 @@
-const { constants } = require("../constants")
-const errorHandler = (err, req, res, next) => {
-    const statusCode = res.statusCode ? res.statusCode : 500;
-    switch (statusCode) {
-        // stackTrace: err.stack
-        case constants.VALIDATION_ERROR:
-            res.json({ title: "Validation Failed", message: err.message });
-            break;
-        case constants.EXISTS:
-            res.json({ title: "Exists", message: err.message });
-            break;
-        case constants.NOT_FOUND:
-            res.json({ title: "Not Found", message: err.message });
-            break;
-        case constants.UNAUTHORIZED:
-            res.json({ title: "Unauthorized", message: err.message });
-            break;
-        case constants.FORBIDDEN:
-            res.json({ title: "Forbidden", message: err.message });
-            break;
-        case constants.SERVER_ERROR:
-            res.json({ title: "Server Error", message: err.message });
-            break;
-        default:
-            break;
-    }
-}
+const httpStatus = require('http-status');
+const APIError = require('../utils/APIError');
 
-module.exports = errorHandler;
+const handler = (err, req, res, next) => {
+    
+    const response = {
+        status: err.status,
+        message: err.message || httpStatus[err.status],
+        errors: err.errors,
+        //   stack: err.stack,
+    };
+
+    // if (env !== 'development') {
+    //   delete response.stack;
+    // }
+
+    res.status(err.status);
+    res.json(response);
+};
+exports.handler = handler;
+
+exports.converter = (err, req, res, next) => {
+    let convertedError = err;
+  
+    if (err instanceof APIError) {
+      convertedError = new APIError({
+        message: 'Validation Error',
+        errors: err.errors,
+        status: err.status,
+        stack: err.stack,
+      });
+    } 
+    return handler(convertedError, req, res);
+  };
+
+exports.notFound = (req, res, next) => {
+      err = new APIError({
+        message: 'Not found',
+        status: httpStatus.NOT_FOUND,
+    });
+    return handler(err, req, res);
+};

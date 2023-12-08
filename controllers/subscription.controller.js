@@ -1,32 +1,38 @@
 const asyncHandler = require("express-async-handler");
 const Subscription = require("../models/subscription.model");
+const APIError = require('../utils/APIError');
 
 
-const getSubscriptions = asyncHandler(async (req, res) => {
+const getSubscriptions = asyncHandler(async (req, res, next) => {
     try {
         const subscriptions = await Subscription.list(req.query);
-        res.status(200).json(subscriptions);
-    } catch (err) {
-        res.status(500);
-        throw new Error(err)
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            subscriptions: subscriptions,
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
 })
 
-const getSubscription = asyncHandler(async (req, res) => {
+const getSubscription = asyncHandler(async (req, res, next) => {
     try {
         const subscription = await Subscription.get(req.params.id)
         if (!subscription) {
-            res.status(404);
-            throw new Error("Subscription not found")
+            next(new APIError({ message: "Subscription not found", status: 200 }));
         }
-        res.status(200).json(subscription);
-    } catch (err) {
-        res.status(500);
-        throw new Error(err)
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            subscription: subscription,
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
 });
 
-const createSubscription = asyncHandler(async (req, res) => {
+const createSubscription = asyncHandler(async (req, res, next) => {
     try {
         const { name, duration, price } = req.body;
         let { entity } = req.user
@@ -36,39 +42,52 @@ const createSubscription = asyncHandler(async (req, res) => {
             throw new Error("Subscription name is required");
         }
         const subscription = await Subscription.create({ name, duration, price, createdBy: entity });
-        res.status(201).json(subscription)
-    } catch (err) {
-        res.status(500);
-        throw new Error(err)
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            subscription: subscription,
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
 })
 
-const updateSubscription = asyncHandler(async (req, res) => {
-    const subscription = await Subscription.findById(req.params.id);
-    if (!subscription) {
-        res.status(404);
-        throw new Error("Subscription not found")
-    }
-    const { name, duration, price } = req.body;
-    let { entity } = req.user
+const updateSubscription = asyncHandler(async (req, res, next) => {
+    try {
+        const subscription = await Subscription.findById(req.params.id);
+        if (!subscription) {
+            res.status(404);
+            throw new Error("Subscription not found")
+        }
+        const { name, duration, price } = req.body;
+        let { entity } = req.user
 
-    let _subscription = { name, duration, price, updatedBy: entity }
-    const updatedSubscription = await Subscription.findByIdAndUpdate(req.params.id, _subscription, { new: true });
-    res.status(200).json(updatedSubscription);
+        let _subscription = { name, duration, price, updatedBy: entity }
+        const updatedSubscription = await Subscription.findByIdAndUpdate(req.params.id, _subscription, { new: true });
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            subscription: updatedSubscription,
+        });
+    } catch (error) {
+        next(new APIError(error));
+    }
 })
 
-const deleteSubscription = asyncHandler(async (req, res) => {
-    try{
+const deleteSubscription = asyncHandler(async (req, res, next) => {
+    try {
         const subscription = await Subscription.findById(req.params.id);
         if (!subscription) {
             res.status(404);
             throw new Error("Category not found")
         }
         let _subscription = await Subscription.findByIdAndDelete(subscription.id)
-        res.status(200).json(_subscription);
-    }catch(err){
-        res.status(404);
-        throw new Error(err)
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
 })
 

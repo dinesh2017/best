@@ -25,7 +25,7 @@ app.use(cors());
 
 app.use("/api/v1", routes)
 
-app.use(errorHandler);
+app.use(errorHandler.handler);
 
 
 app.listen(port, () => {

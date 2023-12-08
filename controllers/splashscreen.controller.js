@@ -1,57 +1,62 @@
 const asyncHandler = require("express-async-handler");
 const SplashScreen = require("../models/splashscreen.model");
+const APIError = require('../utils/APIError');
 
-
-const getSplashScreens = asyncHandler(async (req, res) => {
+const getSplashScreens = asyncHandler(async (req, res, next) => {
     try {
-        const subscriptions = await SplashScreen.list(req.query);
-        res.status(200).json(subscriptions);
-    } catch (err) {
-        res.status(500);
-        throw new Error(err)
+        const splashscreen = await SplashScreen.list(req.query);
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            splashscreens: splashscreen,
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
 })
 
-const getSplashScreen = asyncHandler(async (req, res) => {
+const getSplashScreen = asyncHandler(async (req, res, next) => {
     try {
         const splashscreen = await SplashScreen.get(req.params.id)
         if (!splashscreen) {
-            res.status(404);
-            throw new Error("splash Screen not found")
+            next(new APIError({ message: "Splash Screen not found", status: 200 }));
         }
-        res.status(200).json(splashscreen);
-    } catch (err) {
-        res.status(500);
-        throw new Error(err)
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
 });
 
-const createSplashScreen = asyncHandler(async (req, res) => {
+const createSplashScreen = asyncHandler(async (req, res, next) => {
     try {
         const { name, duration, price } = req.body;
         let { entity } = req.user
         let image = "";
         if (!name) {
-            res.status(400)
-            throw new Error("splashscreen name is required");
+            next(new APIError({ message: "Please enter required fields", status: 200 }));
         }
         if (req.file) {
             const url = `/splashscreen/${req.file.filename}`;
             image = { path: url, name: req.file.filename }
         }
         const splashscreen = await SplashScreen.create({ name, image, createdBy: entity });
-        res.status(201).json(splashscreen)
-    } catch (err) {
-        res.status(500);
-        throw new Error(err)
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            splashscreen: splashscreen,
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
 })
 
-const updateSplashScreen = asyncHandler(async (req, res) => {
+const updateSplashScreen = asyncHandler(async (req, res, next) => {
     const splashscreen = await SplashScreen.findById(req.params.id);
     if (!splashscreen) {
-        res.status(404);
-        throw new Error("splash screen not found")
+        next(new APIError({ message: "Splash Screen not found", status: 200 }));
     }
     let image = "";
     if (req.file) {
@@ -62,21 +67,27 @@ const updateSplashScreen = asyncHandler(async (req, res) => {
     let { entity } = req.user
     let _splashscreen = { name, image, updatedBy: entity }
     const updatedSplashscreen = await SplashScreen.findByIdAndUpdate(req.params.id, _splashscreen, { new: true });
-    res.status(200).json(updatedSplashscreen);
+    res.status(200).json({
+        status: 200,
+        message: "SUCCESS",
+        splashscreen: updatedSplashscreen,
+    });
 })
 
-const deleteSplashScreen = asyncHandler(async (req, res) => {
-    try{
+const deleteSplashScreen = asyncHandler(async (req, res, next) => {
+    try {
         const splashScreen = await SplashScreen.findById(req.params.id);
         if (!splashScreen) {
-            res.status(404);
-            throw new Error("Category not found")
+            next(new APIError({ message: "Splash Screen not found", status: 200 }));
         }
         let _splashScreen = await SplashScreen.findByIdAndDelete(splashScreen.id)
-        res.status(200).json(_splashScreen);
-    }catch(err){
-        res.status(404);
-        throw new Error(err)
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            splashscreen: _splashScreen,
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
 })
 
