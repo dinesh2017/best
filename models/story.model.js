@@ -88,7 +88,7 @@ storySchema.statics = {
         }
 
         if (tags && tags.length > 0) {
-            console.log(tags)
+            
             const tagObjects = await Tags.find({ name: { $in: tags } });
     
             const tagIds = tagObjects.map(tag => tag._id);

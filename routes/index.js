@@ -10,6 +10,8 @@ const profileRoutes = require("./profile.route");
 const authRoutes = require("./auth.route");
 const adminRoutes = require("./admin.route");
 const splashScreenRoutes = require("./splashscreen.route");
+const homeRoutes = require("./home.route");
+const slidesRoutes = require("./slides.route");
 const libraryRoutes = require("./library.route");
 const userRoutes = require("./user.route");
 const router = express.Router();
@@ -27,6 +29,8 @@ router.use('/subscriber', subscriberRoutes)
 router.use('/library', libraryRoutes)
 router.use('/profile', profileRoutes)
 router.use('/splashscreen', splashScreenRoutes)
+router.use('/home', homeRoutes)
+router.use('/slides', slidesRoutes)
 
 
 module.exports = router;
