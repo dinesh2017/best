@@ -18,6 +18,10 @@ const chapterSchema = mongoose.Schema({
         type: Schema.Types.ObjectId,
         ref: "Story"
     },
+    image: {
+        path: { type: String },
+        name: { type: String }
+    },
     audioFile: {
         path: { type: String },
         name: { type: String }
@@ -58,7 +62,7 @@ chapterSchema.statics = {
         try {
             let chapter;
             if (mongoose.Types.ObjectId.isValid(id)) {
-                chapter = await this.findById(id).populate('createdBy updatedBy story subscription', 'name').exec();
+                chapter = await this.findById(id).populate('createdBy updatedBy story subscription', 'name image').exec();
             }
             if (chapter) {
                 return chapter.transform();
@@ -82,7 +86,7 @@ chapterSchema.statics = {
 
         console.log(options)
 
-        let chapters = await this.find(options).populate('createdBy updatedBy story subscription', 'name')
+        let chapters = await this.find(options).populate('createdBy updatedBy story subscription', 'name image')
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
             .limit(perPage * 1)

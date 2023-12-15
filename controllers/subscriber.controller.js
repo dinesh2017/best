@@ -1,15 +1,21 @@
 const asyncHandler = require("express-async-handler");
 const Subscriber = require("../models/subscriber.model");
+const Subscription = require("../models/subscription.model");
 const APIError = require('../utils/APIError');
 
+const addDays = (date, days) => {
+    var result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  }
 
 const getSubscribers = asyncHandler(async (req, res, next) => {
     try {
-        const subscribers = await Subscriber.find()
+        const { subscribers, count, pages } = await Subscriber.list(req.query);
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            subscribers: subscribers,
+            subscribers, count, pages
         });
     } catch (error) {
         next(new APIError(error));
@@ -18,7 +24,7 @@ const getSubscribers = asyncHandler(async (req, res, next) => {
 
 const getSubscriber = asyncHandler(async (req, res, next) => {
     try {
-        const subscriber = await Subscriber.findById(req.params.id);
+        const subscriber = await Subscriber.get(req.params.id);
         if (!subscriber) {
             res.status(404);
             throw new Error("Subscriber not found")
@@ -35,12 +41,17 @@ const getSubscriber = asyncHandler(async (req, res, next) => {
 
 const createSubscriber = asyncHandler(async (req, res, next) => {
     try {
-        const { name } = req.body;
-        if (!name) {
-            res.status(400)
-            throw new Error("Subscriber name is required");
+        
+        const { orderId, subscription, price, discount, total, orderDate, paymentStatus, coupan } = req.body;
+        
+        let { entity } = req.user;
+        if (!orderId || !subscription || price === undefined || discount === undefined || total === undefined || !orderDate || !paymentStatus) {
+            next(new APIError({message:"Please entered required fileds", status : 400}));
         }
-        const subscriber = await Subscriber.create({ name });
+        const subscription_ = await Subscription.findById(subscription);
+        
+        let expiryDate = addDays(orderDate, (subscription_.duration * 30));
+        const subscriber = await Subscriber.create({ orderId, subscription, price, discount,expiryDate, user:entity, total, orderDate, paymentStatus, coupan });
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
@@ -50,6 +61,9 @@ const createSubscriber = asyncHandler(async (req, res, next) => {
         next(new APIError(error));
     }
 })
+
+
+
 
 const updateSubscriber = asyncHandler(async (req, res, next) => {
     try {

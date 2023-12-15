@@ -3,7 +3,7 @@ const fs = require("fs")
 
 exports.initialFolders = async()=>{    
     try {
-        let allDirectory = ["category","story","splashscreen","profile"]
+        let allDirectory = ["category","story","splashscreen","profile","chapters"]
         allDirectory.forEach((dirName)=>{
             if (fs.existsSync(`${__dirname}/../public/${dirName}`)) {
                 console.log(`Directory exists=>${dirName}`)

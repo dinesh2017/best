@@ -97,6 +97,25 @@ userSchema.statics = {
         }
     },
 
+    async getByMobileOrEmail(mobile, email) {
+        try {
+            let user;
+            if (mobile && mobile.number && mobile.countryCode) {
+                user = await this.findOne({ 'mobile.countryCode': mobile.countryCode, 'mobile.number': mobile.number }).exec();
+            }
+            if (!user && email) {
+                user = await this.findOne({ 'email': email }).exec();
+            }
+            if (user) {
+                return user;
+            }
+
+            return null
+        } catch (error) {
+            throw error;
+        }
+    },
+
     async findAndGenerateToken(options) {
         const { mobile, refreshObject, ip } = options;
         if (!mobile) throw new APIError({ message: 'A mobile number is required to generate a token' });

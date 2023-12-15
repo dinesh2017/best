@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const OTP = require("../models/otp.model")
+const APIError = require('../utils/APIError');
 
 var digits = '0123456789'
 var alphabets = 'abcdefghijklmnopqrstuvwxyz'
@@ -29,6 +30,17 @@ exports.generate = (length, options) => {
     return otp
 };
 
+exports.sendOtp_ = async (mobile, email) => {
+    let otp = await this.generate(4, {})
+    let x = {
+        email: email,
+        mobileNumber: `${mobile.countryCode}${mobile.number}`,
+        otp: 1234
+    }
+    const _otp = await OTP.create(x);
+    return { otp: _otp.otp };
+}
+
 exports.sendOtp = asyncHandler(async (req, res, next) => {
     let otp = await this.generate(4, {})
     let x = {
@@ -41,6 +53,36 @@ exports.sendOtp = asyncHandler(async (req, res, next) => {
     req.locals = { otp: _otp.otp }
     return next();
 })
+
+exports.resendOtp = asyncHandler(async (req, res, next) => {
+    console.log("heelow")
+    try {
+        let { mobile, countryCode, email } = req.body;
+
+        if (mobile)
+            data = await OTP.findOne({ mobileNumber: `${countryCode}${mobile}`, isUsed: false, isExpired: false });
+        if (email)
+            data = await OTP.findOne({ email: `${email}`, isUsed: false, isExpired: false });
+
+        if (data) {
+            let otp = await this.generate(4, {})
+            await OTP.findByIdAndUpdate(data.id, { otp: otp }, { new: true });
+            return res.status(200).json({
+                message: "SUCCESS",
+                status: 200,
+                otp: otp
+            })
+        } else {
+            return next(new APIError({ message: `Resend OTP Failed` }));
+        }
+
+    } catch (err) {
+        return next(new APIError({ message: `Resend OTP Failed` }));
+    }
+
+})
+
+
 
 
 exports.createOtp = asyncHandler(async (req, res, next) => {
@@ -61,23 +103,26 @@ exports.verifyOtp = asyncHandler(async (req, res, next) => {
     before5min.setTime(before5min.getTime() - (5 * 60 * 1000));
     console.log(before5min.toLocaleString())
     try {
-        let data = await OTP.findOne({ mobileNumber: `${req.body.countryCode}${req.body.mobile}`, otp:req.body.otp })
-        console.log(data)
+        let { mobile, countryCode, email, otp } = req.body;
+        let data;
+        if (mobile)
+            data = await OTP.findOne({ mobileNumber: `${countryCode}${mobile}`, otp: otp, isUsed: false, isExpired: false });
+        if (email)
+            data = await OTP.findOne({ email: `${email}`, otp: otp, isUsed: false, isExpired: false })
+
         if (data && data.createdAt < before5min) {
-            await OTP.findByIdAndUpdate(data.id, { isExpired:true }, { new: true });
-            res.status(500);
-            throw new Error(`OTP expired at ${data.createdAt.toLocaleString()}`)
+            await OTP.findByIdAndUpdate(data.id, { isExpired: true }, { new: true });
+            next(new APIError({ message: `OTP expired at ${data.createdAt.toLocaleString()}`, status: 400 }));
         }
         else if (data && !data.isUsed) {
-            await OTP.findByIdAndUpdate(data.id, { isUsed:true }, { new: true });
-            return res.status(200).json({ success: true, verify: true })
+            await OTP.findByIdAndUpdate(data.id, { isUsed: true }, { new: true });
+            next();
         } else {
-            throw new Error(`OTP already used`)
+            next(new APIError({ message: `OTP already used Or Invalid`, status: 400 }));
         }
 
     } catch (err) {
-        console.log(err)
-        throw new Error(err)
+        next(new APIError({ message: `OTP verification Failed` }));
     }
 
 })

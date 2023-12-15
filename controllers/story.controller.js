@@ -65,6 +65,7 @@ const updateStory = asyncHandler(async (req, res, next) => {
             res.status(404);
             throw new Error("Story not found")
         }
+        let image = story.image;
         const { name, description, category, tags, age, price } = req.body;
         let { entity } = req.user
         if (req.file) {

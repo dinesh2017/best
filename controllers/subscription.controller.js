@@ -38,9 +38,8 @@ const createSubscription = asyncHandler(async (req, res, next) => {
         const { name, duration, price } = req.body;
         let { entity } = req.user
         let image = "";
-        if (!name || !duration || !price) {
-            res.status(400)
-            throw new Error("Subscription name is required");
+        if (!name || !duration || price === undefined) {
+            next(new APIError({message:"Please enter required fields", status: 400}));
         }
         const subscription = await Subscription.create({ name, duration, price, createdBy: entity });
         res.status(200).json({

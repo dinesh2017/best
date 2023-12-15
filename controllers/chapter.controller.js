@@ -38,12 +38,16 @@ const createChapter = asyncHandler(async (req, res, next) => {
         const { name, description, subscription, story } = req.body;
         let { entity } = req.user
         let { audioFile } = req.local;
-        console.log(req.local)
+        let image = "";
         if (!name) {
             res.status(400)
             throw new Error("All Fields required");
         }
-        const chapter = await Chapter.create({ name, description, subscription, story, audioFile, createdBy: entity });
+        if (req.file) {
+            const url = `/chapters/${req.file.filename}`;
+            image = { path: url, name: req.file.filename }
+        }
+        const chapter = await Chapter.create({ name, description, subscription, story,image, audioFile, createdBy: entity });
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
@@ -65,8 +69,12 @@ const updateChapter = asyncHandler(async (req, res, next) => {
         let { entity } = req.user
         let { audioPath } = req.local;
         let audioFile = ((audioPath) ? audioPath : chapter.audioFile);
-
-        let _chapter = { name, description, subscription, audioFile, story, updatedBy: entity }
+        let image = chapter.image;
+        if (req.file) {
+            const url = `/chapters/${req.file.filename}`;
+            image = { path: url, name: req.file.filename }
+        }
+        let _chapter = { name, description, subscription, audioFile, image, story, updatedBy: entity }
 
         const updatedStory = await Chapter.findByIdAndUpdate(req.params.id, _chapter, { new: true });
         res.status(200).json({
