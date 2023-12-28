@@ -29,7 +29,8 @@ subscriptionSchema.index({ name: 1 }, { unique: true });
 subscriptionSchema.method({
     transform() {
         const transformed = {};
-        const fields = ['id', 'name', 'duration', 'price', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
+        //'createdBy', 'updatedBy', 'updatedAt', 'createdAt'
+        const fields = ['id', 'name', 'duration', 'price'];
 
         fields.forEach((field) => {
             transformed[field] = this[field];
@@ -70,8 +71,8 @@ subscriptionSchema.statics = {
             queryArr.push({ "name": { $regex: search, $options: 'i' } })
             options = { $and: [options, { $or: queryArr }] }
         }
-
-        let subscriptions = await this.find(options).populate('createdBy updatedBy', 'name')
+//.populate('createdBy updatedBy', 'name')
+        let subscriptions = await this.find(options)
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
             .limit(perPage * 1)

@@ -2,39 +2,33 @@ const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const { omitBy, isNil } = require('lodash');
 
-const librarySchema = mongoose.Schema({
-    story: {
-        type: Schema.Types.ObjectId,
-        ref: "Story"
+const  notificationSchema = mongoose.Schema({
+    title: {
+        type: String,
     },
-    chapter: {
-        type: Schema.Types.ObjectId,
-        ref: "Chapter"
-    },
-    user: {
-        type: Schema.Types.ObjectId,
-        ref: "User"
-    },
-    status: {
-        type: Boolean,
-    },
-    time: {
+    msg: {
         type: String,
     },
     type: {
         type: String,
     },
+    createdBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
+    updatedBy: {
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    },
 }, {
     timestamps: true
 });
 
-librarySchema.path('chapter').default(null);
-
-librarySchema.method({
+ notificationSchema.method({
     transform() {
         const transformed = {};
         //, 'updatedAt', 'user', 'createdAt''user', 
-        const fields = ['id', 'subscription', 'chapter',"story", 'time', 'type'];
+        const fields = ['id', 'title', 'type',"msg"];
 
         fields.forEach((field) => {
             transformed[field] = this[field];
@@ -44,7 +38,7 @@ librarySchema.method({
     },
 })
 
-librarySchema.statics = {
+ notificationSchema.statics = {
     /**
       * Get Category Type
       *
@@ -53,13 +47,13 @@ librarySchema.statics = {
       */
     async get(id) {
         try {
-            let library;
+            let  notification;
             //user 
             if (mongoose.Types.ObjectId.isValid(id)) {
-                library = await this.findById(id).populate('story chapter', 'name image').exec();
+                 notification = await this.findById(id).exec();
             }
-            if (library) {
-                return library.transform();
+            if ( notification) {
+                return  notification.transform();
             }
             throw new Error(
                 'Liberary does not exist',
@@ -78,19 +72,19 @@ librarySchema.statics = {
         }
         options.$and = options.$and || [];
         options.$and.push({ "user": user });
-        let libraries = await this.find(options).populate('story chapter', 'name image')
+        let notification = await this.find(options)
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
             .limit(perPage * 1)
             .exec();
-        libraries = libraries.map(lib => lib.transform())
+        notification = notification.map(lib => lib.transform())
         var count = await this.find(options).exec();
         count = count.length;
         var pages = Math.ceil(count / perPage);
 
-        return { libraries, count, pages }
+        return { notification, count, pages }
 
     },
 }
 
-module.exports = mongoose.model("Library", librarySchema);
+module.exports = mongoose.model("Notification",  notificationSchema);

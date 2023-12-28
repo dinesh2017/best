@@ -4,6 +4,8 @@ const APIError = require('../utils/APIError');
 
 const getLibraries = asyncHandler(async (req, res, next) => {
     try {
+        let { entity } = req.user;
+        req.query.user = entity;
         const { libraries, count, pages } = await Library.list(req.query);
         res.status(200).json({
             status: 200,
@@ -18,12 +20,12 @@ const getLibraries = asyncHandler(async (req, res, next) => {
 
 const createLibrary = asyncHandler(async (req, res, next) => {
     try {
-        const { story, chapter, time, type } = req.body;
+        const { story, chapter, time, type, status } = req.body;
         let { entity } = req.user
         if (!story && !chapter) {
             next(new APIError({ message: "Please enter required fields", status: 400 }));
         }
-        const library = await Library.create({ story, chapter, time, type, user: entity });
+        const library = await Library.create({ story, chapter, time, status, type, user: entity });
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
@@ -40,9 +42,9 @@ const updateLibrary = asyncHandler(async (req, res, next) => {
         if (!library) {
             next(new APIError({ message: "Story not found", status: 401 }));
         }
-        const { story, chapter, time, type } = req.body;
+        const { story, chapter, time, status, type } = req.body;
         let { entity } = req.user
-        let _library = { story, chapter, time, type, user: entity }
+        let _library = { story, chapter, time, status, type, user: entity }
 
         const updatedStory = await Library.findByIdAndUpdate(req.params.id, _library, { new: true });
         res.status(200).json({

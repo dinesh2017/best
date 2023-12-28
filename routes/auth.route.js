@@ -4,8 +4,10 @@ const router = express.Router();
 const otpService = require("../services/otp.services")
 const { validateToken } = require("../middleware/validateTokenHandler")
 
-router.route("/register").post(otpService.verifyOtp, register);
-router.route("/changepassword").post(otpService.verifyOtp, changePassword);
+// router.route("/register").post(otpService.verifyOtp, register);
+router.route("/register").post(register);
+// router.route("/changepassword").post(otpService.verifyOtp, changePassword);
+router.route("/changepassword").post(changePassword);
 
 router.route("/resendOTP").post(otpService.resendOtp);
 
