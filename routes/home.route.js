@@ -8,7 +8,7 @@ router.use(validateToken)
 
 const storage = multer.diskStorage({
     destination (req, file, cb) {
-        cb(null, 'public/category');
+        cb(null, 'public/home');
     },
     filename (req, file, cb) {
         let filename = file.originalname.replace(/\s+/g, '').trim()

@@ -30,7 +30,7 @@ router.use(fileUpload());
 
 
 router.route("/").get(getChapters).post(audioUpload,upload.single("image"), createChapter);
-
+router.route("/getById/:id").get(chapterService.getChatpterById);
 router.route("/:id").get(getChapter).put(audioUpload,upload.single("image"), updateChapter).delete(deleteChapter);
 
 router.route('/findByStory/:storyId').get(chapterService.getChaptersByStory)

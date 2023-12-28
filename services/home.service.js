@@ -8,15 +8,17 @@ const Tags = require("../models/tags.model");
 const APIError = require('../utils/APIError');
 const { omitBy, isNil } = require('lodash');
 const Subscriber = require("../models/subscriber.model");
+const { format } = require('date-fns');
 
 getPlan = async (user)=>{
-    const subscriber = await Subscriber.findOne({user:user}).populate("subscription","name -_id").select("orderId price discount total orderDate paymentStatus expiryDate -_id");
+    const subscriber = await Subscriber.findOne({user:user}).populate("subscription","name duration -_id").select("orderId price discount total orderDate paymentStatus expiryDate -_id");
     const subscription = null;
     if(subscriber){
         var today = new Date();
         const isExpired = today >= subscriber.expiryDate;
         const subscription = subscriber.toObject();
         subscription.isExpired = isExpired;
+        subscription.expiryDate = format(subscriber.expiryDate, 'dd-MM-yyyy');
         return subscription;
     }else{
         return subscription;
