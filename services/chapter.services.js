@@ -38,7 +38,8 @@ exports.getChatpterById = asyncHandler(async (req, res, next) => {
             subscription.status = (library.status) ? library.status : false;
         else
             subscription.status = false;
-        subscription.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
+        if(subscription.audioFile)
+            subscription.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
         res.status(200).json({
             status: 200,
             message: "SUCCESS",

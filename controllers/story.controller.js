@@ -20,10 +20,13 @@ const getStories = asyncHandler(async (req, res, next) => {
 const getStory = asyncHandler(async (req, res, next) => {
     try {
         const story = await Story.get(req.params.id)
+        
         if (!story) {
             console.log("heelow")
             next(new APIError({message:"Test",status : 200}));
         }
+        if(story.image)
+            story.image = req.protocol + "://" + req.get('host')  + story.image;
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
@@ -66,19 +69,32 @@ const updateStory = asyncHandler(async (req, res, next) => {
             res.status(404);
             throw new Error("Story not found")
         }
-        let image = story.image;
-        const { name, description, category, tags, age, price } = req.body;
+        
+        const { name, description, category, image, tags, age, price } = req.body;
+        let _image = story.image;
         let { entity } = req.user
         if (req.file) {
             const url = `/story/${req.file.filename}`;
-            image = { path: url, name: req.file.filename }
+            _image = { path: url, name: req.file.filename }
         }
-        let _story = { name, description, category, tags, age, price, image, updatedBy: entity }
+        let _story = { name, description, category, tags, age, price, updatedBy: entity }
+
+        if(image !== ""){
+            _story.image = _image;
+        }else{
+            _story.$unset = { image: 1 };
+        }
         const updatedStory = await Story.findByIdAndUpdate(req.params.id, _story, { new: true });
+
+        const _updatedStory = await Story.get(updatedStory._id)
+        if(_updatedStory && _updatedStory?.image){
+            _updatedStory.image = req.protocol + "://" + req.get('host')  + _updatedStory.image;
+        }
+            
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            story: updatedStory,
+            story: _updatedStory,
         });
     } catch (error) {
         next(new APIError(error));
