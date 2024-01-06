@@ -85,6 +85,13 @@ subscriptionSchema.statics = {
         return { subscriptions, count, pages }
 
     },
+
+    async combo() {
+        let subscriptions = await this.find().select("id name").exec();
+        subscriptions = subscriptions.map(x => {return {label: x.name, value : x._id}});
+        return { subscriptions }
+
+    },
 }
 
 module.exports = mongoose.model("Subscription", subscriptionSchema);

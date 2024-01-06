@@ -86,6 +86,7 @@ const deleteCoupan = asyncHandler(async (req, res, next) => {
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
+            coupan: _coupan,
         });
     } catch (error) {
         next(new APIError(error));

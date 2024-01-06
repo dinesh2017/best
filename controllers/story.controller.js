@@ -37,6 +37,7 @@ const getStory = asyncHandler(async (req, res, next) => {
 const createStory = asyncHandler(async (req, res, next) => {
     try {
         const { name, description, tags, category, age, price } = req.body;
+        
         let { entity } = req.user
         let image = "";
         if (!name) {
@@ -92,10 +93,11 @@ const deleteStory = asyncHandler(async (req, res, next) => {
             res.status(404);
             throw new Error("Story not found")
         }
-        await Story.remove();
+        let _story = await Story.findByIdAndDelete(story.id)
         res.status(200).json({
             status: 200,
-            message: "SUCCESS"
+            message: "SUCCESS",
+            story:_story
         });
     } catch (error) {
         next(new APIError(error));

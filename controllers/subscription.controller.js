@@ -85,6 +85,7 @@ const deleteSubscription = asyncHandler(async (req, res, next) => {
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
+            subscription: _subscription,
         });
     } catch (error) {
         next(new APIError(error));

@@ -6,6 +6,10 @@ const APIError = require('../utils/APIError');
 const getChapters = asyncHandler(async (req, res, next) => {
     try {
         const { chapters, count, pages } = await Chapter.list(req.query);
+        chapters.map((x) => {
+            x.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + x.id;
+
+        })
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
@@ -35,23 +39,24 @@ const getChapter = asyncHandler(async (req, res, next) => {
 
 const createChapter = asyncHandler(async (req, res, next) => {
     try {
-        const { name, description, subscription, story } = req.body;
+        const { name, description, subscriptions, story } = req.body;
         let { entity } = req.user
-        let { audioFile } = req.local;
-        let image = "";
+        let { audioFile, image } = req.local;
         if (!name) {
             res.status(400)
             throw new Error("All Fields required");
         }
-        if (req.file) {
-            const url = `/chapters/${req.file.filename}`;
-            image = { path: url, name: req.file.filename }
-        }
-        const chapter = await Chapter.create({ name, description, subscription, story,image, audioFile, createdBy: entity });
+        // if (req.file) {
+        //     const url = `/chapters/${req.file.filename}`;
+        //     image = { path: url, name: req.file.filename }
+        // }
+        // ,
+        const chapter = await Chapter.create({ name, description, subscriptions, audioFile, story, image, createdBy: entity });
+
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            chapters: chapter,
+            chapters: chapter.transform(),
         });
     } catch (error) {
         next(new APIError(error));
@@ -94,10 +99,11 @@ const deleteChapter = asyncHandler(async (req, res, next) => {
             res.status(404);
             throw new Error("Chapter not found")
         }
-        await Chapter.remove();
+        let _chapter = await Chapter.findByIdAndDelete(chapter.id)
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
+            chapters: _chapter,
         });
     } catch (error) {
         next(new APIError(error));

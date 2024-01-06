@@ -1,31 +1,43 @@
 const s3Client = require('../config/s3Client');
+const asyncHandler = require("express-async-handler");
 const { Upload } = require('@aws-sdk/lib-storage');
-const Transform = require('stream').Transform;
 
-exports.audioUpload = async (req, res, next) => {
 
-    if (!req.files || Object.keys(req.files).length === 0) {
-        req.local = {audioFile : undefined}
-        next()
-    }
+exports.audioUpload = asyncHandler(async (req, res, next) => {
     try {
-        const file = req.files.audiofile;
-        const fileName = `${Date.now().toString()}-${file.name}`;
-        
-        const upload = new Upload({
-            client: s3Client,
-            params: {
-                Bucket: process.env.S3_BUCKET,
-                Key: fileName,
-                Body: file.data
+        if (!req.files || Object.keys(req.files).length === 0) {
+            req.local = { audioFile: undefined }
+        } else {
+            audioFile = undefined;
+            image = undefined;
+            if (req.files?.audiofile) {
+                const file = req.files.audiofile;
+                const fileName = `${Date.now().toString()}-${file.name}`;
+
+                const upload = new Upload({
+                    client: s3Client,
+                    params: {
+                        Bucket: process.env.S3_BUCKET,
+                        Key: fileName,
+                        Body: file.data
+                    }
+                });
+                const result = await upload.done();
+                audioFile = { path: result.Location, name: fileName }
             }
-        });
-        const result = await upload.done();
-        req.local = { audioFile : { path: result.Location, name: fileName } }
-        
+            if (req.files?.image) {
+                const imagefile = req.files.image;
+                const imagefileName = `${Date.now().toString()}-${imagefile.name}`;
+                uploadPath = '/home/ubuntu/best/public/chapters/' + imagefileName;
+                req.files?.image.mv(uploadPath);
+                image = { path: '/chapters/' + imagefileName, name: imagefileName }
+            }
+            req.local = {image, audioFile}
+            
+        }
         next()
     }
     catch (err) {
         next(err)
     }
-}
+})

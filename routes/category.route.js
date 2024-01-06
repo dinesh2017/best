@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { fileUpload } = require("../services/upload.services");
+const { getCategoryCombo } = require("../services/common.service");
 // const imageLib = require("../utils/imageLib");
 const { getCategories, getCategory, createCategory, updateCategory, deleteCategory } = require("../controllers/category.controller");
 const { validateToken } = require("../middleware/validateTokenHandler")
@@ -25,8 +26,13 @@ const fileFilter = (req,file,cb) => {
 
 const upload = multer({storage: storage, fileFilter : fileFilter});
 
+
 router.route("/").get(getCategories).post(upload.single("image"), createCategory);
 
+router.route("/getComboValues").get(getCategoryCombo)
+
 router.route("/:id").get(getCategory).put(upload.single("image"),updateCategory).delete(deleteCategory);
+
+
 
 module.exports = router;

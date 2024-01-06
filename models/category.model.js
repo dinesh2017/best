@@ -38,6 +38,16 @@ categorySchema.method({
 
         return transformed;
     },
+    comboTransform() {
+        const transformed = {};
+        const fields = ['id', 'name'];
+
+        fields.forEach((field) => {
+            transformed[field] = this[field];
+        });
+
+        return transformed;
+    },
 })
 
 categorySchema.statics = {
@@ -83,6 +93,12 @@ categorySchema.statics = {
         var pages = Math.ceil(count / perPage);
 
         return { categorys, count, pages }
+
+    },
+    async combo() {
+        let categories = await this.find().select("id name").exec();
+        categories = categories.map(x => {return {label: x.name, value : x._id}});
+        return { categories }
 
     },
 }

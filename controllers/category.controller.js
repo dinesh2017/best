@@ -65,12 +65,15 @@ const updateCategory = asyncHandler(async (req, res, next) => {
         }
         const { name } = req.body;
         let { entity } = req.user
+        let _category = null;
         if (req.file) {
-            //${req.protocol}://${req.get('host')}
             const url = `/category/${req.file.filename}`;
             image = { path: url, name: req.file.filename }
+            _category = { name, image, updatedBy: entity }
+        }else{
+            _category = { name, updatedBy: entity }
         }
-        let _category = { name, image, updatedBy: entity }
+        
         const updatedCategory = await Category.findByIdAndUpdate(req.params.id, _category, { new: true });
         res.status(200).json({
             status: 200,

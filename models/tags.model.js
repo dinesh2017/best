@@ -78,6 +78,13 @@ tagsSchema.statics = {
         return { tags, count, pages }
 
     },
+
+    async combo() {
+        let tags = await this.find().select("id name").exec();
+        tags = tags.map(x => {return {label: x.name, value : x._id}});
+        return { tags }
+
+    },
 }
 
 module.exports = mongoose.model("Tags", tagsSchema);

@@ -10,7 +10,7 @@ const chapterSchema = mongoose.Schema({
     description: {
         type: String,
     },
-    subscription: [{
+    subscriptions: [{
         type: Schema.Types.ObjectId,
         ref: "Subscription"
     }],
@@ -39,18 +39,18 @@ const chapterSchema = mongoose.Schema({
 })
 
 chapterSchema.index({ name: 1 });
-chapterSchema.path('subscription').default(null);
+chapterSchema.path('subscriptions').default(null);
 
 chapterSchema.method({
     transform() {
         const transformed = {};
-        const fields = ['id', 'name', 'description', 'subscription', 'story', 'audioFile', 'category', 'tags', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
+        const fields = ['id', 'name', 'description', 'subscriptions', 'story', 'audioFile', 'category', 'image', 'tags', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
 
         fields.forEach((field) => {
-            if (field == 'audioFile')
-                transformed[field] = this[field]?.path;
-            else
-                transformed[field] = this[field];
+            // if (field == 'audioFile')
+            //     transformed[field] = this[field]?.path;
+            // else
+            transformed[field] = this[field];
         });
 
         return transformed;
@@ -62,7 +62,7 @@ chapterSchema.statics = {
         try {
             let chapter;
             if (mongoose.Types.ObjectId.isValid(id)) {
-                chapter = await this.findById(id).populate('createdBy updatedBy story subscription', 'name image').exec();
+                chapter = await this.findById(id).populate('createdBy updatedBy story subscriptions', 'name image').exec();
             }
             if (chapter) {
                 return chapter.transform();
@@ -84,9 +84,7 @@ chapterSchema.statics = {
             options = { $and: [options, { $or: queryArr }] }
         }
 
-        console.log(options)
-
-        let chapters = await this.find(options).populate('createdBy updatedBy story subscription', 'name image')
+        let chapters = await this.find(options).populate('createdBy updatedBy story subscriptions', 'name image')
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
             .limit(perPage * 1)

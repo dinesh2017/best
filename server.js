@@ -3,6 +3,7 @@ const errorHandler = require("./middleware/errorHandler");
 const dotenv = require("dotenv").config();
 const connectDb = require("./config/dbConnection");
 const routes = require('./routes')
+const publicRoutes = require('./routes/public.route')
 const bodyParaser = require("body-parser");
 const cors = require('cors');
 require("./config/initialFolders")
@@ -24,6 +25,7 @@ app.use(cors());
 
 
 app.use("/api/v1", routes)
+app.use("/", publicRoutes)
 
 app.use(errorHandler.handler);
 
