@@ -1,36 +1,37 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/auth/user.model");
+const APIError = require('../utils/APIError');
 
-
-const getUsers = asyncHandler(async (req, res) => {
+const getUsers = asyncHandler(async (req, res, next) => {
     const users = await User.find()
     res.status(200).json(users);
 })
 
-const getUserInfo = asyncHandler(async (req, res) => {
+const getUserInfo = asyncHandler(async (req, res, next) => {
     try {
         let { entity } = req.user
-        const user = await User.findById(entity);
+        const user = await User.get(entity);
         if (!user) {
-            res.status(404);
-            throw new Error("User not found")
+            next(new APIError({ message: "User not found", status: 200 }));
         }
-        res.status(200).json(user);
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            user
+        });
     } catch (err) {
-        res.status(500);
-        throw new Error(err)
+        next(new APIError(err));
     }
 
 });
 
-const uploadProfilePic = asyncHandler(async (req, res) => {
+const uploadProfilePic = asyncHandler(async (req, res,next) => {
     try {
         let { entity } = req.user
         
         const user = await User.findById(entity);
         if (!user) {
-            res.status(404);
-            throw new Error("User not found")
+            next(new APIError({ message: "User not found", status: 200 }));
         }
         if (req.file) {
             const url = `/profile/${req.file.filename}`;
@@ -38,10 +39,14 @@ const uploadProfilePic = asyncHandler(async (req, res) => {
         }
         let _user = { picture: image, updatedBy: entity }
         const updatedUser = await User.findByIdAndUpdate(entity, _user, { new: true });
-        res.status(200).json(updatedUser);
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            updatedUser
+        });
+        
     } catch (err) {
-        res.status(500);
-        throw new Error(err)
+        next(new APIError(err));
     }
 
 });

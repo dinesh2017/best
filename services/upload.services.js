@@ -10,6 +10,7 @@ exports.audioUpload = asyncHandler(async (req, res, next) => {
         } else {
             audioFile = undefined;
             image = undefined;
+            videoFile = undefined;
             if (req.files?.audiofile) {
                 const file = req.files.audiofile;
                 const fileName = `${Date.now().toString()}-${file.name}`;
@@ -25,6 +26,21 @@ exports.audioUpload = asyncHandler(async (req, res, next) => {
                 const result = await upload.done();
                 audioFile = { path: result.Location, name: fileName }
             }
+            if (req.files?.videoFile) {
+                const file = req.files.videoFile;
+                const fileName = `${Date.now().toString()}-${file.name}`;
+
+                const upload = new Upload({
+                    client: s3Client,
+                    params: {
+                        Bucket: process.env.S3_BUCKET,
+                        Key: fileName,
+                        Body: file.data
+                    }
+                });
+                const result = await upload.done();
+                videoFile = { path: result.Location, name: fileName }
+            }
             if (req.files?.image) {
                 const imagefile = req.files.image;
                 const imagefileName = `${Date.now().toString()}-${imagefile.name}`;
@@ -32,7 +48,7 @@ exports.audioUpload = asyncHandler(async (req, res, next) => {
                 req.files?.image.mv(uploadPath);
                 image = { path: '/chapters/' + imagefileName, name: imagefileName }
             }
-            req.local = {image, audioFile}
+            req.local = {image, audioFile, videoFile}
             
         }
         next()

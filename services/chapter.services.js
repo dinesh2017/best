@@ -5,13 +5,17 @@ const APIError = require('../utils/APIError');
 const { readAudioFile } = require("../services/upload.services");
 const { PassThrough } = require('stream');
 const s3Client = require('../config/s3Client');
-const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
 
 exports.getChaptersByStory = asyncHandler(async (req, res, next) => {
     try {
         let { storyId } = req.params
         req.query.story = storyId
         const { chapters, count, pages } = await Chapter.list(req.query);
+        chapters.map((x)=>{
+            x.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + x.id;
+            return x;    
+        });
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
@@ -62,6 +66,7 @@ exports.getChatpterAudioById = asyncHandler(async (req, res, next) => {
             Bucket: process.env.S3_BUCKET,
             Key: chapter.audioFile.name,
         };
+        const { ContentLength } = await s3Client.send(new HeadObjectCommand(downloadParams));
         const passThroughStream = new PassThrough();
         s3Client.send(new GetObjectCommand(downloadParams))
             .then((data) => {
@@ -73,6 +78,7 @@ exports.getChatpterAudioById = asyncHandler(async (req, res, next) => {
             });
         res.setHeader('Content-Type', 'audio/mp3');
         res.setHeader('Content-Disposition', 'inline; filename=audio.mp3');
+        res.setHeader('Content-Length', ContentLength);
 
         // Pipe the pass-through stream to the response
         passThroughStream.pipe(res);

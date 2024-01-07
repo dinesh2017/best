@@ -12,6 +12,10 @@ const subscriptionSchema = mongoose.Schema({
     price: {
         type: Number,
     },
+    mode: {
+        type: String,
+        enum:["FREE", "PAID"],
+    },
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User"

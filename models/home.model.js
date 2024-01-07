@@ -3,11 +3,14 @@ const { omitBy, isNil } = require('lodash');
 
 const homeSchema = mongoose.Schema({
     videoUrl: {
-        type: String,
+        path: { type: String },
+        name: { type: String },
+        isEnable: { type: Boolean }
     },
     popupImage: {
         path: { type: String },
-        name: { type: String }
+        name: { type: String },
+        isEnable: { type: String }
     },
     StoryTypes: [
         { type: String }
@@ -29,7 +32,7 @@ homeSchema.index({ name: 1 }, { unique: true });
 homeSchema.method({
     transform() {
         const transformed = {};
-        const fields = ['id', 'popupImage', 'videoUrl', 'StoryTypes','createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
+        const fields = ['id', 'popupImage', 'videoUrl', 'StoryTypes', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
 
         fields.forEach((field) => {
             if (field == 'image')
