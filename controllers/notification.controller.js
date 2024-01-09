@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Notification = require("../models/notification.model");
 const APIError = require('../utils/APIError');
+const NotificatonService = require("../services/notification.service");
 
 const getNotifications = asyncHandler(async (req, res, next) => {
     try {
@@ -34,12 +35,14 @@ const getNotification = asyncHandler(async (req, res, next) => {
 
 const createNotification = asyncHandler(async (req, res, next) => {
     try {
+        console.log(req.body)
         const { title, type, msg } = req.body;
         let { entity } = req.user
         if (!msg) {
-            next(new APIError({ message: "Notification name is required", status: 200 }));
+            next(new APIError({ message: "Notification message is required", status: 200 }));
         }
         const notification = await Notification.create({ title, type, msg, createdBy: entity });
+        NotificatonService.sendNotification([],title,msg);
         res.status(200).json({
             status: 200,
             notification: notification,

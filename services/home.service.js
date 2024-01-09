@@ -56,7 +56,7 @@ function transformFunction(result) {
 exports.getHomeData = asyncHandler(async (req, res, next) => {
     try {
         let { entity } = req.user
-        const home = await Home.findOne().select("videoUrl popupImage StoryTypes -_id");
+        const home = await Home.findOne().select("videoUrl popupImage videoImage StoryTypes -_id");
         let modifiedHome = {}
         if(home){
             console.log()
@@ -64,7 +64,8 @@ exports.getHomeData = asyncHandler(async (req, res, next) => {
                 modifiedHome = {
                     ...modifiedHome,
                     videoUrl: req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
-                    videoEnabled : home.videoUrl.isEnable
+                    videoEnabled : home.videoUrl.isEnable,
+                    videoImage : (home.videoImage != undefined)?(req.protocol + "://" + req.get('host')  + home.videoImage.path):""
                 };
             }else{
                 modifiedHome = {
@@ -92,27 +93,25 @@ exports.getHomeData = asyncHandler(async (req, res, next) => {
         const slides = await Slides.find().select("title description action image -_id");
         const user = await User.findById(entity).select("name email gender mobile picture -_id");
         const subscription = await getPlan(entity);
-        const notification = await Notification.find().select("title msg type -_id").limit(10);
+        
+        const notification = await Notification.find({ removed: { $nin: [entity] } }).select("title msg type ").limit(10);
+        
+        const modifiedNotifications = notification.map(doc => {
+            doc.id = doc._id;
+            delete doc._id;
+            return doc;
+          });
         let types = home.StoryTypes;
         let options = omitBy({}, isNil);
-        const stories = [];
-        if(types.length != 0){
-            const promises = types.map(async (tag) => {
-                const tagObjects = await Tags.find({ name: { $in: tag } });
-                const tagIds = tagObjects.map((tag) => tag._id);
-                const options = { tags: { $in: tagIds } };
-                // Assuming Story.find returns a promise
-                const st = await Story.find(options).select("name image.path description -_id").limit(10);
-                return st;
-              });
-            
-              // Wait for all promises to resolve
-              const results = await Promise.all(promises);
-            
-              // Concatenate the results into the stories array
-              stories.push(...results);
+        let stories = [];
+        if(home.StoryTypes != ""){
+            const options = { tags: { $in: home.StoryTypes } };
+            stories = await Story.find(options).select("name image.path description -_id").limit(10);
         }
-        
+
+        let notificationCount = 0;
+        if(modifiedNotifications.length != 0)
+            notificationCount = modifiedNotifications.length;
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
@@ -121,8 +120,8 @@ exports.getHomeData = asyncHandler(async (req, res, next) => {
             profile:user,
             stories : stories,
             subscription,
-            notificationCount:0,
-            notificaions:notification
+            notificationCount:notificationCount,
+            notificaions:modifiedNotifications
         });
 
     } catch (error) {

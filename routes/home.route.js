@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { validateToken } = require("../middleware/validateTokenHandler");
-const { updateHome, createHome, getHome, createOrUpdateVideo,createOrUpdateImage } = require("../controllers/home.controller");
+const { updateHome, createHome, getHome, createOrUpdateVideo,createOrUpdateImage, createOrUpdateVideoImage, updateStoryType } = require("../controllers/home.controller");
 const homeService = require("../services/home.service");
 const multer = require('multer');
 router.use(validateToken)
@@ -30,6 +30,9 @@ router.route("/").post(createHome).get(getHome);
 
 router.route("/uploadVideo").post(audioUpload, createOrUpdateVideo)
 router.route("/uploadImage").post(audioUpload, createOrUpdateImage)
+router.route("/uploadVideoImage").post(audioUpload, createOrUpdateVideoImage)
+router.route("/updateStoryType").post(audioUpload, updateStoryType);
+
 
 router.route("/:id").put(updateHome);
 

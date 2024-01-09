@@ -12,9 +12,12 @@ const homeSchema = mongoose.Schema({
         name: { type: String },
         isEnable: { type: String }
     },
-    StoryTypes: [
-        { type: String }
-    ],
+    videoImage:{
+        path: { type: String },
+        name: { type: String },
+    },
+    StoryTypes: { type: String },
+    
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
@@ -32,7 +35,7 @@ homeSchema.index({ name: 1 }, { unique: true });
 homeSchema.method({
     transform() {
         const transformed = {};
-        const fields = ['id', 'popupImage', 'videoUrl', 'StoryTypes', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
+        const fields = ['id', 'popupImage','videoImage', 'videoUrl', 'StoryTypes', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
 
         fields.forEach((field) => {
             if (field == 'image')

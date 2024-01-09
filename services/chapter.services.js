@@ -44,10 +44,15 @@ exports.getChatpterById = asyncHandler(async (req, res, next) => {
             subscription.status = false;
 
         const library_ = await Library.findOne({ chapter: chapter.id, type: "BOOKMARK", user: entity });
-        if (library_)
+        if (library_){
             subscription.BookMarkStatus = (library_.status) ? library_.status : false;
-        else
+            subscription.time = library_.time;
+        }
+        else{
             subscription.BookMarkStatus = false;
+            subscription.time = null;
+        }
+            
 
         if(subscription.audioFile)
             subscription.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;

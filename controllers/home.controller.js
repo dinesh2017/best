@@ -2,37 +2,50 @@ const asyncHandler = require("express-async-handler");
 const Home = require("../models/home.model");
 const APIError = require('../utils/APIError');
 
+const getHomeData = async (req) => {
+    const home = await Home.findOne();
+    let modifiedHome = {}
+    if (home) {
+        if (home.videoUrl.path !== undefined) {
+            modifiedHome = {
+                ...modifiedHome,
+                videoUrl: req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
+                videoEnabled: home.videoUrl.isEnable,
+
+            };
+        }
+        if (home.popupImage.path !== undefined) {
+            modifiedHome = {
+                ...modifiedHome,
+                popupImage: req.protocol + "://" + req.get('host') + home.popupImage.path,
+                popupEnabled: home.popupImage.isEnable
+            };
+        }
+        if (home.videoImage.path !== undefined) {
+            modifiedHome = {
+                ...modifiedHome,
+                videoImage: req.protocol + "://" + req.get('host') + home.videoImage.path,
+            };
+        }
+        modifiedHome = {
+            ...modifiedHome,
+            StoryTypes:home.StoryTypes
+        }
+    }
+    return modifiedHome;
+}
+
 const getHome = asyncHandler(async (req, res, next) => {
     try {
-        const home = await Home.findOne();
-        if (!home) {
-            next(new APIError({ message: "Home not found", status: 200 }));
-        }
-        let modifiedHome = {}
-        if (home) {
-            if(home.videoUrl.path !== undefined){
-                modifiedHome = {
-                    ...modifiedHome,
-                    videoUrl: req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
-                    videoEnabled: home.videoUrl.isEnable,
-                    
-                };
-            }
-
-            console.log(home.popupImage)
-            if(home.popupImage.path !== undefined){
-                modifiedHome = {
-                    ...modifiedHome,
-                    popupImage: req.protocol + "://" + req.get('host')  + home.popupImage.path,
-                    popupEnabled: home.popupImage.isEnable
-                };
-            }
-            
-        }
+        // const home = await Home.findOne();
+        // if (!home) {
+        //     next(new APIError({ message: "Home not found", status: 200 }));
+        // }
+        const home = await getHomeData(req)
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            home: modifiedHome,
+            home
         });
     } catch (error) {
         next(new APIError(error));
@@ -55,26 +68,30 @@ const createOrUpdateVideo = asyncHandler(async (req, res, next) => {
         const createHome = await Home.create(valuesToUpdate);
     } else {
         const updateHome = await Home.findByIdAndUpdate(findHome.id, valuesToUpdate, { new: true });
-       
+
     }
     const home = await Home.findOne();
     let modifiedHome = {}
     if (home) {
-        if(home.videoUrl.path !== undefined){
+        if (home.videoUrl.path !== undefined) {
             modifiedHome = {
                 ...modifiedHome,
                 videoUrl: req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
                 videoEnabled: home.videoUrl.isEnable,
-                
+
             };
         }
-
-        console.log(home.popupImage)
-        if(home.popupImage.path !== undefined){
+        if (home.popupImage.path !== undefined) {
             modifiedHome = {
                 ...modifiedHome,
-                popupImage: req.protocol + "://" + req.get('host')  + home.popupImage.path,
+                popupImage: req.protocol + "://" + req.get('host') + home.popupImage.path,
                 popupEnabled: home.popupImage.isEnable
+            };
+        }
+        if (home.videoImage.path !== undefined) {
+            modifiedHome = {
+                ...modifiedHome,
+                videoImage: req.protocol + "://" + req.get('host') + home.videoImage.path,
             };
         }
     }
@@ -99,19 +116,63 @@ const createOrUpdateImage = asyncHandler(async (req, res, next) => {
 
     if (!findHome) {
         const createHome = await Home.create(valuesToUpdate);
-        res.status(200).json({
-            status: 200,
-            home: createHome,
-            message: "SUCCESS",
-        });
     } else {
         const updateHome = await Home.findByIdAndUpdate(findHome.id, valuesToUpdate, { new: true });
-        res.status(200).json({
-            status: 200,
-            home: updateHome,
-            message: "SUCCESS",
-        });
     }
+    const home = await getHomeData(req)
+    res.status(200).json({
+        status: 200,
+        home,
+        message: "SUCCESS",
+    });
+});
+
+const updateStoryType = asyncHandler(async (req, res, next) => {
+    const { StoryTypes } = req.body;
+    const findHome = await Home.findOne();
+    let { entity } = req.user;
+    let valuesToUpdate = { StoryTypes };
+    if (!findHome) {
+        const createHome = await Home.create(valuesToUpdate);
+
+    } else {
+        const updateHome = await Home.findByIdAndUpdate(findHome.id, valuesToUpdate, { new: true });
+    }
+    const home = await getHomeData(req)
+    res.status(200).json({
+        status: 200,
+        home,
+        message: "SUCCESS",
+    });
+});
+
+
+
+const createOrUpdateVideoImage = asyncHandler(async (req, res, next) => {
+    const findHome = await Home.findOne();
+    let { image } = req.local;
+    let valuesToUpdate = {};
+    let { entity } = req.user
+    if (image) {
+        let { path, name } = image;
+        valuesToUpdate = { videoImage: { path, name }, createdBy: entity, updatedBy: entity }
+    }
+    else
+        valuesToUpdate.$unset = { videoImage: 1 };
+
+    if (!findHome) {
+        const createHome = await Home.create(valuesToUpdate);
+
+    } else {
+        const updateHome = await Home.findByIdAndUpdate(findHome.id, valuesToUpdate, { new: true });
+
+    }
+    const home = await getHomeData(req)
+    res.status(200).json({
+        status: 200,
+        home,
+        message: "SUCCESS",
+    });
 });
 
 
@@ -157,4 +218,4 @@ const updateHome = asyncHandler(async (req, res, next) => {
 
 })
 
-module.exports = { updateHome, createHome, getHome, createOrUpdateVideo,createOrUpdateImage }
+module.exports = { updateHome, createHome, getHome, createOrUpdateVideo, createOrUpdateImage, createOrUpdateVideoImage, updateStoryType }

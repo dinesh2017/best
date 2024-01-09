@@ -12,6 +12,14 @@ const  notificationSchema = mongoose.Schema({
     type: {
         type: String,
     },
+    read:[{
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    }],
+    removed:[{
+        type: Schema.Types.ObjectId,
+        ref: "User"
+    }],
     createdBy: {
         type: Schema.Types.ObjectId,
         ref: "User"
@@ -72,7 +80,7 @@ const  notificationSchema = mongoose.Schema({
         }
         options.$and = options.$and || [];
         options.$and.push({ "user": user });
-        let notification = await this.find(options)
+        let notification = await this.find(options).populate('createdBy updatedBy', 'name')
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
             .limit(perPage * 1)

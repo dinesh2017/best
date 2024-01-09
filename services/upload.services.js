@@ -43,7 +43,7 @@ exports.audioUpload = asyncHandler(async (req, res, next) => {
             }
             if (req.files?.image) {
                 const imagefile = req.files.image;
-                const imagefileName = `${Date.now().toString()}-${imagefile.name}`;
+                const imagefileName = `${Date.now().toString()}-${imagefile.name}.png`;
                 uploadPath = '/home/ubuntu/best/public/chapters/' + imagefileName;
                 req.files?.image.mv(uploadPath);
                 image = { path: '/chapters/' + imagefileName, name: imagefileName }

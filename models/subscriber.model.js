@@ -38,11 +38,11 @@ const subscriberSchema = mongoose.Schema({
     },
     createdBy: {
         type: Schema.Types.ObjectId,
-        ref: "Admin"
+        ref: "User"
     },
     updatedBy: {
         type: Schema.Types.ObjectId,
-        ref: "Admin"
+        ref: "User"
     },
 }, {
     timestamps: true
@@ -73,7 +73,16 @@ subscriberSchema.statics = {
         try {
             let subscribe;
             if (mongoose.Types.ObjectId.isValid(id)) {
-                subscribe = await this.findById(id).populate('subscription user coupan createdBy updatedBy', 'name').exec();
+                subscribe = await this.findById(id)
+                .populate({
+                    path:"subscription",
+                    select:"name duration price"
+                })
+                .populate({
+                    path:"coupan",
+                    select:"name discount"
+                })
+                .populate('subscription user  createdBy updatedBy', 'name').exec();
             }
             if (subscribe) {
                 return subscribe.transform();
@@ -94,7 +103,16 @@ subscriberSchema.statics = {
             options = { $and: [options, { $or: queryArr }] }
         }
 
-        let subscribers = await this.find(options).populate('subscription user coupan createdBy updatedBy', 'name')
+        let subscribers = await this.find(options)
+        .populate({
+            path:"subscription",
+            select:"name duration price"
+        })
+        .populate({
+            path:"coupan",
+            select:"name discount"
+        })
+        .populate('user createdBy updatedBy', 'name')
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
             .limit(perPage * 1)
