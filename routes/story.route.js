@@ -25,9 +25,10 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
 router.route("/").get(getStories).post(upload.single("image"), createStory);
-
+router.route('/StoriesWithChapters').get(storyService.GetStoriesWithChapters)
 router.route("/:id").get(getStory).put(upload.single("image"), updateStory).delete(deleteStory);
 
 router.route('/findByCategory/:categoryId').get(storyService.getStoriesByCategory)
+
 
 module.exports = router;

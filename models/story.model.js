@@ -24,6 +24,12 @@ const storySchema = mongoose.Schema({
             ref: "Tags"
         }
     ],
+    chapters: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: "Chapter"
+        }
+    ],
     price: {
         type: Number,
     },

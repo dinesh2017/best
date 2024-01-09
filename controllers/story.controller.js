@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Story = require("../models/story.model");
+const Chapter = require("../models/chapter.model");
 const APIError = require('../utils/APIError');
 
 
@@ -109,7 +110,9 @@ const deleteStory = asyncHandler(async (req, res, next) => {
             res.status(404);
             throw new Error("Story not found")
         }
+        await Chapter.deleteMany({ _id: { $in: story.chapters } });
         let _story = await Story.findByIdAndDelete(story.id)
+
         res.status(200).json({
             status: 200,
             message: "SUCCESS",

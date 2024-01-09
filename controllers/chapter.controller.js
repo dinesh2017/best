@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Chapter = require("../models/chapter.model");
+const Story = require("../models/story.model");
 const APIError = require('../utils/APIError');
 
 
@@ -53,13 +54,15 @@ const createChapter = asyncHandler(async (req, res, next) => {
         //     image = { path: url, name: req.file.filename }
         // }
         // ,
+
         let chapter = await Chapter.create({ name, description, subscriptions, audioFile, story, image, createdBy: entity });
+        if(chapter)
+            await Story.updateOne({ _id: chapter.story }, { $push: { chapters: chapter._id } });
         const _chapter = await Chapter.get(chapter._id)
         if(_chapter){
             _chapter.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
             _chapter.image = req.protocol + "://" + req.get('host')  + _chapter.image.path;
         }
-            
         
         res.status(200).json({
             status: 200,
@@ -98,10 +101,13 @@ const updateChapter = asyncHandler(async (req, res, next) => {
         if(AudioFile == "Remove"){
             _chapter.$unset = { audioFile: 1 };
         }
-
-        console.log(_chapter)
         
         const updatedStory = await Chapter.findByIdAndUpdate(req.params.id, _chapter, { new: true });
+        if(updatedStory){
+            await Story.updateOne({ _id: updatedStory.story }, { $push: { chapters: updatedStory._id } });
+        }
+            
+
         const chapter_ = await Chapter.get(updatedStory._id);
         
         if(chapter_ && chapter_?.audioFile)
@@ -127,6 +133,8 @@ const deleteChapter = asyncHandler(async (req, res, next) => {
             throw new Error("Chapter not found")
         }
         let _chapter = await Chapter.findByIdAndDelete(chapter.id)
+        if(_chapter)
+            await Story.updateOne({ _id: _chapter.story }, { $pull: { chapters: req.params.id } });
         res.status(200).json({
             status: 200,
             message: "SUCCESS",

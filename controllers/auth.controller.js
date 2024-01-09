@@ -27,6 +27,32 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
     }
 });
 
+exports.updateUserProfile = asyncHandler(async (req, res, next) => {
+    try {
+    let { email, countryCode, mobile, name } = req.body;
+        let { entity } = req.user;
+        let _user = await User.findById(entity);
+        if(!_user){
+            return res.status(200).json({
+                message: `User doesn't exists`, status: 401
+            });
+        }
+        let _mobile = {
+            countryCode,
+            number: mobile
+        }
+        const updatedUser = await User.findByIdAndUpdate(_user.id, {email, mobile:_mobile, name}, { new: true });
+        return res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            user : updatedUser
+        });
+        
+    } catch (err) {
+        console.log(err)
+        return next(new APIError({ message: `Update User Failed` }));
+    }
+});
 exports.changePassword = asyncHandler(async (req, res, next) => {
     try {
         let { password, mobile, email,countryCode } = req.body;
