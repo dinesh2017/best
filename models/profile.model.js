@@ -73,14 +73,15 @@ profileSchema.statics = {
         }
     },
 
-    async list({ page = 1, perPage = 50, user, search }) {
-        let options = omitBy({ user }, isNil);
+    async list({ page = 1, perPage = 50, search, createdBy }) {
+        let options = omitBy({ }, isNil);
         if (search && search.length > 0) {
             let queryArr = []
             queryArr.push({ "name": { $regex: search, $options: 'i' } })
             options = { $and: [options, { $or: queryArr }] }
         }
-        console.log("list")
+        options.$and = options.$and || [];
+        options.$and.push({ "createdBy": createdBy });
 
         let profile = await this.find(options).populate('createdBy updatedBy', 'name')
             .sort({ seqNumber: 1 })

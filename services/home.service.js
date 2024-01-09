@@ -14,7 +14,7 @@ const s3Client = require('../config/s3Client');
 const { GetObjectCommand } = require('@aws-sdk/client-s3');
 
 getPlan = async (user)=>{
-    const subscriber = await Subscriber.findOne({user:user}).populate("subscription user","name duration -_id").select("orderId price discount total orderDate paymentStatus expiryDate -_id");
+    const subscriber = await Subscriber.findOne({user:user}).sort({ createdAt: -1 }).populate("subscription user","name duration -_id").select("orderId price discount total orderDate paymentStatus expiryDate -_id");
     const subscription = null;
     if(subscriber){
         var today = new Date();

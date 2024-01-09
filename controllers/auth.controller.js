@@ -55,28 +55,38 @@ exports.changePassword = asyncHandler(async (req, res, next) => {
 exports.register = asyncHandler(async (req, res, next) => {
     try {
 
-        let { fcmId, countryCode, mobile, name, email, otp, password, platformType = "ANDROID" } = req.body
+        let { fcmId, countryCode,from, mobile, name, email, otp, password, platformType = "ANDROID" } = req.body
         mobileDeviceInfo = { fcmId, platformType };
-        if (!name || !email || !mobile || !password) {
+        if (!name  || !password) {
             return res.status(200).json({
                 message: `Please entered required fields`, status: 203
             });
-            // return next(new APIError({ message: `Please entered required fields`, status: 203 }));
         }
-        let _mobile = {
-            countryCode,
-            number: mobile
+        let _user = null;
+        let _mobile = null;let errorMsg = "";
+        if(mobile){
+            _mobile = {
+                countryCode,
+                number: mobile
+            }
+            _user = await User.getByMobile(_mobile)
+            errorMsg = "A user with that mobile already exists"
         }
-        let _user = await User.getByMobile(_mobile)
+
+        if(email){
+            _user = await User.getByMobileOrEmail("",email)
+            errorMsg = "A user with that email already exists"
+        }
         if (_user) {
             return res.status(200).json({
-                message: `A user with that mobile/email already exists`, status: 203
+                message: errorMsg, status: 203
             });
-            // return next(new APIError({ message: `A user with that mobile/email already exists`, status: 203 }));
         } else {
-
             const hashedPassword = await bcrypt.hash(password, 10);
-            _user = await User.create({ mobile: _mobile, email, name, password: hashedPassword });
+            if(email == ""){
+                email = null;
+            }
+            _user = await User.create({ mobile: _mobile, email, name, from, password: hashedPassword });
             const { user, accessToken } = await User.findAndGenerateToken({ mobile: _user.mobile });
             return res.status(200).json({
                 status: 200,
@@ -87,6 +97,7 @@ exports.register = asyncHandler(async (req, res, next) => {
         }
 
     } catch (err) {
+        console.log(err)
         next(new APIError({ message: `Registration Failed` }));
     }
 })
@@ -94,48 +105,112 @@ exports.register = asyncHandler(async (req, res, next) => {
 exports.login = asyncHandler(async (req, res, next) => {
     try {
         let { fcmId, countryCode, mobile, email, password, platformType = "ANDROID" } = req.body;
-        if (!mobile && !password) {
-            return res.status(200).json({
-                status: 203,
-                message: 'Please entered required fields',
-            });
-            // return next(new APIError({ message: `Please entered required fields`, status: 203 }));
-        }
-        mobileDeviceInfo = { fcmId, platformType };
-        let _mobile = {
-            countryCode,
-            number: mobile
-        }
-        let _user = await User.getByMobile(_mobile);
-
-        if (_user == null) {
-            return res.status(200).json({
-                status: 404,
-                message: `User not found`,
-            });
-            // return next(new APIError({ message: `User not found`, status: 404 }));
-        }
-        if (await bcrypt.compare(password, _user.password)) {
+        if(email && !password){
+            console.log(email)
+            mobileDeviceInfo = { fcmId, platformType };
+            let _user = await User.getByMobileOrEmail("",email);
+            if (_user == null) {
+                return res.status(200).json({
+                    status: 404,
+                    message: `User not found`,
+                });
+            }
+            
             _user.mobileDeviceInfo = mobileDeviceInfo
-            _user.mobile = _mobile;
+            
             if (fcmId) {
                 _user.mobileDeviceInfo.fcmId = fcmId;
             }
             await _user.save();
-            const { user, accessToken } = await User.findAndGenerateToken({ mobile: _user.mobile })
+            const { user, accessToken } = await User.findAndGenerateTokenByEmail({ email: email })
             return res.status(200).json({
                 status: 200,
                 message: "SUCCESS",
+                isExisted : true,
                 user,
                 accessToken,
             });
-        } else {
-            return res.status(200).json({
-                status: 401,
-                message: `The username or password you entered is incorrect..`,
-            });
-            // return next(new APIError({ message: `The username or password you entered is incorrect..`, status: 401 }));
+        }else if(email && password){
+
+            if (!email && !password) {
+                return res.status(200).json({
+                    status: 203,
+                    message: 'Please entered required fields',
+                });
+            }
+            mobileDeviceInfo = { fcmId, platformType };
+            
+            let _user = await User.getByMobileOrEmail("",email);
+            
+    
+            if (_user == null) {
+                return res.status(200).json({
+                    status: 404,
+                    message: `User not found`,
+                });
+            }
+            if (await bcrypt.compare(password, _user.password)) {
+                _user.mobileDeviceInfo = mobileDeviceInfo
+                if (fcmId) {
+                    _user.mobileDeviceInfo.fcmId = fcmId;
+                }
+                await _user.save();
+                const { user, accessToken } = await User.findAndGenerateTokenByEmail({ email: _user.email })
+                return res.status(200).json({
+                    status: 200,
+                    message: "SUCCESS",
+                    user,
+                    accessToken,
+                });
+            } else {
+                return res.status(200).json({
+                    status: 401,
+                    message: `The username or password you entered is incorrect..`,
+                });
+            }
+
+        }else{
+            if (!mobile && !password) {
+                return res.status(200).json({
+                    status: 203,
+                    message: 'Please entered required fields',
+                });
+            }
+            mobileDeviceInfo = { fcmId, platformType };
+            let _mobile = {
+                countryCode,
+                number: mobile
+            }
+            let _user = await User.getByMobile(_mobile);
+    
+            if (_user == null) {
+                return res.status(200).json({
+                    status: 404,
+                    message: `User not found`,
+                });
+            }
+            if (await bcrypt.compare(password, _user.password)) {
+                _user.mobileDeviceInfo = mobileDeviceInfo
+                _user.mobile = _mobile;
+                if (fcmId) {
+                    _user.mobileDeviceInfo.fcmId = fcmId;
+                }
+                await _user.save();
+                const { user, accessToken } = await User.findAndGenerateToken({ mobile: _user.mobile })
+                return res.status(200).json({
+                    status: 200,
+                    message: "SUCCESS",
+                    user,
+                    accessToken,
+                });
+            } else {
+                return res.status(200).json({
+                    status: 401,
+                    message: `The username or password you entered is incorrect..`,
+                });
+            }
         }
+        
     } catch (err) {
         return next(new APIError({ message: `Login Failed` }));
     }
@@ -144,7 +219,7 @@ exports.login = asyncHandler(async (req, res, next) => {
 
 exports.verifyuser = asyncHandler(async (req, res, next) => {
     try {
-        let { mobile, countryCode, email } = req.body
+        let { mobile, countryCode,  email } = req.body
         let _mobile = {
             countryCode,
             number: mobile
@@ -158,7 +233,8 @@ exports.verifyuser = asyncHandler(async (req, res, next) => {
         let _user = await User.getByMobileOrEmail(_mobile, email)
         if (_user) {
             return res.status(200).json({
-                message: `A user with that mobile/email already exists`, status: 203
+                message: `A user with that mobile/email already exists`, 
+                status: 203
             });
             // return next(new APIError({ message: `A user with that mobile/email already exists`, status: 203 }));
         } else {

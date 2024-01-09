@@ -79,8 +79,8 @@ storySchema.statics = {
         }
     },
 
-    async list({ page = 1, perPage = 50, category,tags, search }) {
-        let options = omitBy({category}, isNil);
+    async list({ page = 1, perPage = 50, category, tags, search }) {
+        let options = omitBy({ category }, isNil);
         if (search && search.length > 0) {
             let queryArr = []
             queryArr.push({ "name": { $regex: search, $options: 'i' } })
@@ -88,11 +88,11 @@ storySchema.statics = {
         }
 
         if (tags && tags.length > 0) {
-            
+
             const tagObjects = await Tags.find({ name: { $in: tags } });
-    
+
             const tagIds = tagObjects.map(tag => tag._id);
-    
+
             options.tags = { $in: tagIds };
         }
 
@@ -107,7 +107,6 @@ storySchema.statics = {
         var pages = Math.ceil(count / perPage);
 
         return { story, count, pages }
-
     },
 }
 

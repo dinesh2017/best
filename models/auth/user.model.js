@@ -11,7 +11,7 @@ const userSchema = mongoose.Schema({
     email: {
         type: String,
         match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address'],
-        unique: [true, 'User email already exists'],
+        // unique: [true, 'User email already exists'],
         trim: true,
         lowercase: true,
     },
@@ -23,6 +23,11 @@ const userSchema = mongoose.Schema({
         trim: true
     },
     password: { type: String },
+    from: { 
+        type: String,
+        enum : ["FACEBOOK","GOOGLE","APP"],
+        default:"APP"
+    },
     gender: { type: String, enum: Gender },
     dob: { type: Date },
     mobileDeviceInfo: {
@@ -39,6 +44,7 @@ const userSchema = mongoose.Schema({
     {
         timestamps: true
     });
+
 
 userSchema.method({
     async token(ip) {
@@ -143,6 +149,28 @@ userSchema.statics = {
                 return { user: user.transform(), accessToken };
             }
             err.message = 'Incorrect mobile';
+        } else if (refreshObject && refreshObject.userEmail === email) {
+            if (moment(refreshObject.expires).isBefore()) {
+                err.message = 'Invalid refresh token.';
+            } else {
+                return { user, accessToken: user.token() };
+            }
+        } else {
+            err.message = 'Incorrect mobile or refreshToken';
+        }
+        throw new Error("Unauthorized");
+    },
+    async findAndGenerateTokenByEmail(options) {
+        const { email, refreshObject, ip } = options;
+        if (!email) throw new APIError({ message: 'Email is required to generate a token' });
+
+        const user = await this.findOne({ 'email': email }).exec();
+        if (email) {
+            if (user) {
+                const accessToken = await user.token(ip);
+                return { user: user.transform(), accessToken };
+            }
+            err.message = 'Incorrect Email';
         } else if (refreshObject && refreshObject.userEmail === email) {
             if (moment(refreshObject.expires).isBefore()) {
                 err.message = 'Invalid refresh token.';

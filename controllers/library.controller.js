@@ -21,29 +21,33 @@ const getLibraries = asyncHandler(async (req, res, next) => {
 
 const createLibrary = asyncHandler(async (req, res, next) => {
     try {
-        const { story, chapter, time, type, status } = req.body;
+        const { story, chapter, time,timeInSec, type, status } = req.body;
         let { entity } = req.user
         if (!story && !chapter) {
             next(new APIError({ message: "Please enter required fields", status: 400 }));
         }
-        if(type == "FAVORITE"){
-            const library_ = await Library.findOne({chapter : chapter, user : entity, type : "FAVORITE"});
-            if(library_){
-                let _library = { status }
-                const library = await Library.findByIdAndUpdate(library_._id, _library, { new: true });
-                res.status(200).json({
-                    status: 200,
-                    message: "SUCCESS",
-                    library: library,
-                });
+        let library_ = null;
+        // if(type == "FAVORITE"){
+            
+        // }else{
+        //     library_ = await Library.findOne({chapter : chapter, user : entity, type : "BOOKMARK"});
+        // }
+        library_ = await Library.findOne({chapter : chapter, user : entity, type : type});
+        
+        if(library_){
+            let _library;
+            if(type == "BOOKMARK"){
+                _library = { status, time, timeInSec }
             }else{
-                const library = await Library.create({ story, chapter, time, status, type, user: entity });
-                res.status(200).json({
-                    status: 200,
-                    message: "SUCCESS",
-                    library: library,
-                });
+                _library = { status }
             }
+            
+            const library = await Library.findByIdAndUpdate(library_._id, _library, { new: true });
+            res.status(200).json({
+                status: 200,
+                message: "SUCCESS",
+                library: library,
+            });
         }else{
             const library = await Library.create({ story, chapter, time, status, type, user: entity });
             res.status(200).json({
@@ -52,6 +56,14 @@ const createLibrary = asyncHandler(async (req, res, next) => {
                 library: library,
             });
         }
+        // }else{
+        //     const library = await Library.create({ story, chapter, time, status, type, user: entity });
+        //     res.status(200).json({
+        //         status: 200,
+        //         message: "SUCCESS",
+        //         library: library,
+        //     });
+        // }
         
         
     } catch (error) {

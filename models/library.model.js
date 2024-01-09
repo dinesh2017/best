@@ -22,6 +22,9 @@ const librarySchema = mongoose.Schema({
     time: {
         type: String,
     },
+    timeInSec:{
+        type: String,
+    },
     type: {
         type: String,
     },
@@ -35,7 +38,7 @@ librarySchema.method({
     transform() {
         const transformed = {};
         //, 'updatedAt', 'user', 'createdAt''user', 
-        const fields = ['id', 'subscription', 'chapter',"story",'status', 'time', 'type','createdAt'];
+        const fields = ['id', 'subscription', 'chapter',"story",'status','timeInSec', 'time', 'type','createdAt'];
 
         fields.forEach((field) => {
             if (field === 'createdAt' && this[field]) {
@@ -75,7 +78,7 @@ librarySchema.statics = {
         }
     },
 
-    async list({ page = 1, perPage = 50, search, user }) {
+    async list({ page = 1, perPage = 50, search, user, status}) {
         let options = omitBy({}, isNil);
         if (search && search.length > 0) {
             let queryArr = []
@@ -84,6 +87,7 @@ librarySchema.statics = {
         }
         options.$and = options.$and || [];
         options.$and.push({ "user": user });
+        options.$and.push({ "status": status });
         let libraries = await this.find(options).populate('story chapter', 'name description image')
             .sort({ seqNumber: 1 })
             .skip(perPage * (page * 1 - 1))
