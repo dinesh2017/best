@@ -1,6 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Coupan = require("../models/coupan.model");
-
+const APIError = require('../utils/APIError');
 
 const getCoupans = asyncHandler(async (req, res, next) => {
     try {
