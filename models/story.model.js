@@ -84,7 +84,14 @@ storySchema.statics = {
             throw new Error(error);
         }
     },
-
+    async count(){
+        try {
+            var count = await this.find().exec();
+            return count.length;
+        } catch (error) {
+            throw new Error(error);
+        }
+    },
     async list({ page = 1, perPage = 50, category, tags, search }) {
         let options = omitBy({ category }, isNil);
         if (search && search.length > 0) {

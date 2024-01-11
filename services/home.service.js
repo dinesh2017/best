@@ -15,7 +15,7 @@ const { GetObjectCommand } = require('@aws-sdk/client-s3');
 
 getPlan = async (user)=>{
     const subscriber = await Subscriber.findOne({user:user}).sort({ createdAt: -1 }).populate("subscription user","name duration -_id").select("orderId price discount total orderDate paymentStatus expiryDate -_id");
-    const subscription = null;
+    const subscription = "";
     if(subscriber){
         var today = new Date();
         const isExpired = today >= subscriber.expiryDate;
@@ -117,7 +117,7 @@ exports.getHomeData = asyncHandler(async (req, res, next) => {
             message: "SUCCESS",
             homeData: modifiedHome,
             slides : slides,
-            profile:user,
+            profile:(user)?user:"",
             stories : stories,
             subscription,
             notificationCount:notificationCount,

@@ -49,7 +49,9 @@ const createSubscriber = asyncHandler(async (req, res, next) => {
             next(new APIError({message:"Please entered required fileds", status : 400}));
         }
         const subscription_ = await Subscription.findById(subscription);
-        
+
+        await Subscriber.updateMany({ user: entity }, { activePlan: 0 });
+
         let expiryDate = addDays(orderDate, (subscription_.duration * 30));
         const subscriber = await Subscriber.create({ orderId, subscription, price, discount,expiryDate, user:entity, total, orderDate, paymentStatus, coupan });
         res.status(200).json({

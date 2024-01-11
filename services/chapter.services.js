@@ -47,10 +47,12 @@ exports.getChatpterById = asyncHandler(async (req, res, next) => {
         if (library_){
             subscription.BookMarkStatus = (library_.status) ? library_.status : false;
             subscription.time = library_.time;
+            subscription.timeInSec = library_.timeInSec;
         }
         else{
             subscription.BookMarkStatus = false;
-            subscription.time = null;
+            subscription.time = "";
+            subscription.timeInSec = "";
         }
             
 
