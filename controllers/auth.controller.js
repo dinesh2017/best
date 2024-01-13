@@ -14,7 +14,9 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const passwordMatch = await bcrypt.compare(oldPassword, _user.password);
         if(!passwordMatch){
-            return next(new APIError({ message: `Old Password doesn't match`, status: 401 }));
+            return res.status(200).json({
+                message: `Old Password doesn't match`, status: 401
+            });
         }
         const updatedUser = await User.findByIdAndUpdate(_user.id, {password: hashedPassword}, { new: true });
         return res.status(200).json({
@@ -22,7 +24,6 @@ exports.changeUserPassword = asyncHandler(async (req, res, next) => {
             message: "SUCCESS",
         });
     } catch (err) {
-        console.log(err)
         return next(new APIError({ message: `Change Password Failed` }));
     }
 });

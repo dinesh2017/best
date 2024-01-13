@@ -12,38 +12,39 @@ const { format } = require('date-fns');
 const { PassThrough } = require('stream');
 const s3Client = require('../config/s3Client');
 const { GetObjectCommand } = require('@aws-sdk/client-s3');
+const { getVedio } = require("../config/audioConfig");
 
-getPlan = async (user)=>{
-    const subscriber = await Subscriber.findOne({user:user}).sort({ createdAt: -1 }).populate("subscription user","name duration -_id").select("orderId price discount total orderDate paymentStatus expiryDate -_id");
-    const subscription = "";
-    if(subscriber){
+getPlan = async (user) => {
+    const subscriber = await Subscriber.findOne({ user: user }).sort({ createdAt: -1 }).populate("subscription user", "name duration -_id").select("orderId price discount total orderDate paymentStatus expiryDate -_id");
+    const subscription = null;
+    if (subscriber) {
         var today = new Date();
         const isExpired = today >= subscriber.expiryDate;
         const subscription = subscriber.toObject();
         subscription.isExpired = isExpired;
         subscription.expiryDate = format(subscriber.expiryDate, 'dd-MM-yyyy');
         return subscription;
-    }else{
+    } else {
         return subscription;
     }
 }
 
 exports.getUserPlan = asyncHandler(async (req, res, next) => {
     try {
-    let { entity } = req.user
-    
-    const subscription = await getPlan(entity);
-    
-    res.status(200).json({
-        status: 200,
-        message: "SUCCESS",
-        subscription
-    });
+        let { entity } = req.user
 
-   
-} catch (error) {
-    next(new APIError(error));
-}
+        const subscription = await getPlan(entity);
+
+        res.status(200).json({
+            status: 200,
+            message: "SUCCESS",
+            subscription
+        });
+
+
+    } catch (error) {
+        next(new APIError(error));
+    }
 });
 
 function transformFunction(result) {
@@ -58,70 +59,76 @@ exports.getHomeData = asyncHandler(async (req, res, next) => {
         let { entity } = req.user
         const home = await Home.findOne().select("videoUrl popupImage videoImage StoryTypes -_id");
         let modifiedHome = {}
-        if(home){
+        if (home) {
             console.log()
-            if(Object.keys(home.videoUrl).length !== 0){
+            if (Object.keys(home.videoUrl).length !== 0) {
                 modifiedHome = {
                     ...modifiedHome,
-                    videoUrl: req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
-                    videoEnabled : home.videoUrl.isEnable,
-                    videoImage : (home.videoImage != undefined)?(req.protocol + "://" + req.get('host')  + home.videoImage.path):""
+                    videoUrl: getVedio(home.videoUrl.path),//req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
+                    videoEnabled: home.videoUrl.isEnable,
+                    videoImage: (home.videoImage != undefined) ? (req.protocol + "://" + req.get('host') + home.videoImage.path) : ""
                 };
-            }else{
+            } else {
                 modifiedHome = {
                     ...modifiedHome,
                     videoUrl: "",
-                    videoEnabled : false
+                    videoEnabled: false
                 };
             }
-            if(home.popupImage.path !== undefined){
+            if (home.popupImage.path !== undefined) {
                 modifiedHome = {
                     ...modifiedHome,
-                    popupImage: req.protocol + "://" + req.get('host')  + home.popupImage.path,
-                    popupEnabled : home.popupImage.isEnable
+                    popupImage: req.protocol + "://" + req.get('host') + home.popupImage.path,
+                    popupEnabled: home.popupImage.isEnable
                 };
-            }else{
+            } else {
                 modifiedHome = {
                     ...modifiedHome,
                     popupImage: "",
-                    popupImage : false
+                    popupImage: false
                 };
             }
-            
+
         }
-        
+
         const slides = await Slides.find().select("title description action image -_id");
         const user = await User.findById(entity).select("name email gender mobile picture -_id");
         const subscription = await getPlan(entity);
-        
+
         const notification = await Notification.find({ removed: { $nin: [entity] } }).select("title msg type ").limit(10);
-        
+
         const modifiedNotifications = notification.map(doc => {
             doc.id = doc._id;
             delete doc._id;
             return doc;
-          });
+        });
         let types = home.StoryTypes;
         let options = omitBy({}, isNil);
         let stories = [];
-        if(home.StoryTypes != ""){
-            const options = { tags: { $in: home.StoryTypes } };
-            stories = await Story.find(options).select("name image.path description -_id").limit(10);
+        if (home.StoryTypes != "") {
+            const currentProfile = Profile.findOne({ user: entity, activeProfile: true });
+            let options = {};
+            if (!currentProfile)
+                options = { tags: { $in: home.StoryTypes } };
+            else
+                options = { tags: { $in: home.StoryTypes }, ageFrom: { $gte: currentProfile.age }, ageTo: { $lte: currentProfile.age } };
+            
+            stories = await Story.find(options).select("name image.path description").limit(10);
         }
 
         let notificationCount = 0;
-        if(modifiedNotifications.length != 0)
+        if (modifiedNotifications.length != 0)
             notificationCount = modifiedNotifications.length;
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
             homeData: modifiedHome,
-            slides : slides,
-            profile:(user)?user:"",
-            stories : stories,
+            slides: slides,
+            profile: (user) ? user : null,
+            stories: stories,
             subscription,
-            notificationCount:notificationCount,
-            notificaions:modifiedNotifications
+            notificationCount: notificationCount,
+            notificaions: modifiedNotifications
         });
 
     } catch (error) {

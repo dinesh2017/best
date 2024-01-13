@@ -14,6 +14,12 @@ const storySchema = mongoose.Schema({
     age: {
         type: String,
     },
+    ageFrom: {
+        type: String,
+    },
+    ageTo: {
+        type: String,
+    },
     category: {
         type: Schema.Types.ObjectId,
         ref: "Category"

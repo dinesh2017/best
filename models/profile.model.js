@@ -16,6 +16,10 @@ const profileSchema = mongoose.Schema({
     dob: { type: Date },
     age: { type: Number },
     email: { type: String },
+    activeProfile: {
+        type: Boolean,
+        default:false
+    },
     picture: {
         path: { type: String },
         name: { type: String }
@@ -37,7 +41,7 @@ profileSchema.index({ name: 1 }, { unique: true });
 profileSchema.method({
     transform() {
         const transformed = {};
-        const fields = ['id', 'name', 'picture', 'gender', 'age', 'email', 'dob', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
+        const fields = ['id', 'name', 'picture', 'gender', 'age', 'activeProfile', 'email', 'dob', 'createdBy', 'updatedBy', 'updatedAt', 'createdAt'];
 
         fields.forEach((field) => {
             if (field == 'image')

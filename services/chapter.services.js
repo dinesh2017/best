@@ -6,6 +6,7 @@ const { readAudioFile } = require("../services/upload.services");
 const { PassThrough } = require('stream');
 const s3Client = require('../config/s3Client');
 const { GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { getAudio } = require("../config/audioConfig");
 
 exports.getChaptersByStory = asyncHandler(async (req, res, next) => {
     try {
@@ -13,7 +14,7 @@ exports.getChaptersByStory = asyncHandler(async (req, res, next) => {
         req.query.story = storyId
         const { chapters, count, pages } = await Chapter.list(req.query);
         chapters.map((x)=>{
-            x.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + x.id;
+            x.audioFile = getAudio(x)//;req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + x.id;
             return x;    
         });
         res.status(200).json({
@@ -46,18 +47,29 @@ exports.getChatpterById = asyncHandler(async (req, res, next) => {
         const library_ = await Library.findOne({ chapter: chapter.id, type: "BOOKMARK", user: entity });
         if (library_){
             subscription.BookMarkStatus = (library_.status) ? library_.status : false;
-            subscription.time = library_.time;
-            subscription.timeInSec = library_.timeInSec;
+            subscription.time = (library_.time)?library_.time:"00:00:00";
+            subscription.timeInSec = (library_.timeInSec)?library_.timeInSec:"0";
         }
         else{
             subscription.BookMarkStatus = false;
-            subscription.time = "";
-            subscription.timeInSec = "";
+            subscription.time = "00:00:00";
+            subscription.timeInSec = 0;
+        }
+
+        const resume = await Library.findOne({ chapter: chapter.id, type: "RESUME", user: entity });
+        if(resume){
+            subscription.ResumeStatus = (resume.status) ? resume.status : false;
+            subscription.ResumeTime = (resume.time)?resume.time:"00:00:00";
+            subscription.ResumeTimeInSec = (resume.timeInSec)?resume.timeInSec:0;
+        }else{
+            subscription.ResumeStatus = false;
+            subscription.ResumeTime = "00:00:00";
+            subscription.ResumeTimeInSec = 0;
         }
             
 
         if(subscription.audioFile)
-            subscription.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
+            subscription.audioFile = getAudio(chapter);//req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
         res.status(200).json({
             status: 200,
             message: "SUCCESS",

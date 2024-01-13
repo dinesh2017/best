@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Home = require("../models/home.model");
 const APIError = require('../utils/APIError');
+const { getVedio } = require("../config/audioConfig");
 
 const getHomeData = async (req) => {
     const home = await Home.findOne();
@@ -9,7 +10,7 @@ const getHomeData = async (req) => {
         if (home.videoUrl.path !== undefined) {
             modifiedHome = {
                 ...modifiedHome,
-                videoUrl: req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
+                videoUrl: getVedio(home.videoUrl.path),//req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
                 videoEnabled: home.videoUrl.isEnable,
 
             };
@@ -76,7 +77,7 @@ const createOrUpdateVideo = asyncHandler(async (req, res, next) => {
         if (home.videoUrl.path !== undefined) {
             modifiedHome = {
                 ...modifiedHome,
-                videoUrl: req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
+                videoUrl: getVedio(home.videoUrl.path),//req.protocol + "://" + req.get('host') + "/home/getvideo/" + home.videoUrl.name,
                 videoEnabled: home.videoUrl.isEnable,
 
             };

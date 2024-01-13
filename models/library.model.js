@@ -27,6 +27,7 @@ const librarySchema = mongoose.Schema({
     },
     type: {
         type: String,
+        enum:['BOOKMARK','FAVORITE','RESUME']
     },
 }, {
     timestamps: true

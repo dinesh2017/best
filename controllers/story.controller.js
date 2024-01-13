@@ -52,7 +52,8 @@ const createStory = asyncHandler(async (req, res, next) => {
             const url = `/story/${req.file.filename}`;
             image = { path: url, name: req.file.filename }
         }
-        const story = await Story.create({ name, tags, description, category, age, price, image, createdBy: entity });
+        let agebetween = age.split("-");
+        const story = await Story.create({ name, tags, description, category, ageFrom:agebetween[0], ageTo:agebetween[1], age, price, image, createdBy: entity });
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
@@ -78,7 +79,8 @@ const updateStory = asyncHandler(async (req, res, next) => {
             const url = `/story/${req.file.filename}`;
             _image = { path: url, name: req.file.filename }
         }
-        let _story = { name, description, category, tags, age, price, updatedBy: entity }
+        let agebetween = age.split("-");
+        let _story = { name, description, category, tags, ageFrom:agebetween[0], ageTo:agebetween[1], age, price, updatedBy: entity }
 
         if(image !== ""){
             _story.image = _image;

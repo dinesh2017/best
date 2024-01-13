@@ -21,19 +21,19 @@ const login = asyncHandler(async (req, res, next) => {
         if (!email && !password) {
             return next(new APIError({ message: `Please enter email and password` }));
         }
-        let _user = await User.getByMobileOrEmail("",email);
-        if (_user == null) {
+        let _admin = await Admin.getByMobileOrEmail(email);
+        if (_admin == null) {
             return res.status(404).json({
                 status: 404,
                 message: `User not found`,
             });
         }
-        if (await bcrypt.compare(password, _user.password)) {
-            const { user, accessToken } = await User.findAndGenerateTokenByEmail({ email: _user.email })
+        if (await bcrypt.compare(password, _admin.password)) {
+            const { admin, accessToken } = await Admin.findAndGenerateTokenByEmail({ email: _admin.email })
             return res.status(200).json({
                 status: 200,
                 message: "SUCCESS",
-                user,
+                admin,
                 accessToken,
             });
         }else{
@@ -159,7 +159,6 @@ const updateAdmin = asyncHandler(async (req, res) => {
 
 const deleteAdmin = asyncHandler(async (req, res) => {
     const user = await Admin.findById(req.params.id);
-    console.log(user)
     if (!user) {
         res.status(404);
         throw new Error("Admin not found")

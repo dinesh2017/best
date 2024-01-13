@@ -38,6 +38,8 @@ const createLibrary = asyncHandler(async (req, res, next) => {
             let _library;
             if(type == "BOOKMARK"){
                 _library = { status, time, timeInSec }
+            }else if(type == "RESUME"){
+                _library = { status, time, timeInSec }
             }else{
                 _library = { status }
             }
@@ -49,7 +51,15 @@ const createLibrary = asyncHandler(async (req, res, next) => {
                 library: library,
             });
         }else{
-            const library = await Library.create({ story, chapter, time, status, type, user: entity });
+            let lib;
+            if(type == "BOOKMARK"){
+                lib = { story, chapter, status, time, timeInSec, type, user: entity }
+            }else if(type == "RESUME"){
+                lib = { story, chapter,status, time, timeInSec, type, user: entity }
+            }else{
+                lib = { story, chapter,status, type, user: entity }
+            }
+            const library = await Library.create(lib);
             res.status(200).json({
                 status: 200,
                 message: "SUCCESS",

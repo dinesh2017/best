@@ -27,6 +27,7 @@ const upload = multer({ storage: storage, fileFilter: fileFilter });
 router.route("/").get(getProfiles).post(upload.single("image"), createProfile);
 
 router.route('/getAllProfiles').get(profileService.getProfilesByUser)
+router.route('/activate-profile/:id').get(profileService.activateProfile)
 
 router.route("/:id").get(getProfile).put(upload.single("image"), updateProfile).delete(deleteProfile);
 

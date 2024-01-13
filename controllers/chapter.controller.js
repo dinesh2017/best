@@ -2,6 +2,7 @@ const asyncHandler = require("express-async-handler");
 const Chapter = require("../models/chapter.model");
 const Story = require("../models/story.model");
 const APIError = require('../utils/APIError');
+const { getAudio } = require("../config/audioConfig");
 
 
 const getChapters = asyncHandler(async (req, res, next) => {
@@ -9,7 +10,7 @@ const getChapters = asyncHandler(async (req, res, next) => {
         const { chapters, count, pages } = await Chapter.list(req.query);
         chapters.map((x) => {
             if(x.audioFile)
-                x.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + x.id;
+                x.audioFile = getAudio(x);//req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + x.id;
             if(x.image.path !== undefined)
                 x.image = req.protocol + "://" + req.get('host')  + x.image.path;
         })
@@ -60,7 +61,7 @@ const createChapter = asyncHandler(async (req, res, next) => {
             await Story.updateOne({ _id: chapter.story }, { $push: { chapters: chapter._id } });
         const _chapter = await Chapter.get(chapter._id)
         if(_chapter){
-            _chapter.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
+            _chapter.audioFile = getAudio(chapter);//req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
             _chapter.image = req.protocol + "://" + req.get('host')  + _chapter.image.path;
         }
         
@@ -111,7 +112,7 @@ const updateChapter = asyncHandler(async (req, res, next) => {
         const chapter_ = await Chapter.get(updatedStory._id);
         
         if(chapter_ && chapter_?.audioFile)
-            chapter_.audioFile = req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
+            chapter_.audioFile = getAudio(chapter);//req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + chapter.id;
 
         if(chapter_.image.path)
             chapter_.image = req.protocol + "://" + req.get('host')  + chapter_.image.path;
