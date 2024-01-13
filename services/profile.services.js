@@ -21,18 +21,21 @@ exports.getProfilesByUser = asyncHandler(async (req, res, next) => {
 
 exports.activateProfile = asyncHandler(async (req, res, next) => {
     try {
-        const profile = await Profile.findById(req.params.id);
-        if(!profile){
-            next(new APIError({ message: "Profile not found", status: 200 }));
-        }
         let { entity } = req.user
+        if(req.params.id != "all"){
+            const profile = await Profile.findById(req.params.id);
+            if(!profile){
+                next(new APIError({ message: "Profile not found", status: 200 }));
+            }
+        }
         await Profile.updateMany({ createdBy: entity }, { activeProfile: false });
-        const updateProfile = await Profile.findByIdAndUpdate(req.params.id, {activeProfile:true}, { new: true });
-        
+        if(req.params.id != 'all'){
+            const updateProfile = await Profile.findByIdAndUpdate(req.params.id, {activeProfile:true}, { new: true });
+        }
+
         res.status(200).json({
             status: 200,
-            message: "SUCCESS",
-            profile:updateProfile
+            message: "SUCCESS"
         });
     } catch (error) {
         next(new APIError(error));

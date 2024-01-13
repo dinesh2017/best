@@ -10,17 +10,24 @@ const { getAudio } = require("../config/audioConfig");
 
 exports.getChaptersByStory = asyncHandler(async (req, res, next) => {
     try {
+        let { entity } = req.user;
         let { storyId } = req.params
         req.query.story = storyId
         const { chapters, count, pages } = await Chapter.list(req.query);
-        chapters.map((x)=>{
+        let modifiedChapters = await Promise.all(chapters.map(async (x)=>{
             x.audioFile = getAudio(x)//;req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + x.id;
+            const {ResumeStatus, ResumeTime, ResumeTimeInSec , timeInSecTotal} = await getResumeData(x, entity);
+            x.ResumeStatus = ResumeStatus;
+            x.ResumeTime = ResumeTime;
+            x.ResumeTimeInSec = ResumeTimeInSec;
+            x.timeInSecTotal = timeInSecTotal;
             return x;    
-        });
+        }));
+        
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            chapters: chapters,
+            chapters: modifiedChapters,
             count, pages
         });
 
@@ -28,6 +35,24 @@ exports.getChaptersByStory = asyncHandler(async (req, res, next) => {
         next(new APIError(error));
     }
 })
+
+const getResumeData = async(chapter, entity)=>{
+    let ResumeStatus = false;let ResumeTime = "00:00:00";let ResumeTimeInSec = 0;let timeInSecTotal =0;
+    const resume = await Library.findOne({ chapter: chapter.id, type: "RESUME", user: entity });
+    if(resume){
+        ResumeStatus = (resume.status) ? resume.status : false;
+        ResumeTime = (resume.time)?resume.time:"00:00:00";
+        ResumeTimeInSec = (resume.timeInSec)?resume.timeInSec:0;
+        timeInSecTotal = (resume.timeInSecTotal)?resume.timeInSecTotal:0;
+    }else{
+        ResumeStatus = false;
+        ResumeTime = "00:00:00";
+        timeInSecTotal = 0;
+        ResumeTimeInSec = 0;
+    }
+    console.log(ResumeStatus)
+    return {ResumeStatus, ResumeTime, ResumeTimeInSec , timeInSecTotal};
+}
 
 exports.getChatpterById = asyncHandler(async (req, res, next) => {
     try {
@@ -55,7 +80,6 @@ exports.getChatpterById = asyncHandler(async (req, res, next) => {
             subscription.time = "00:00:00";
             subscription.timeInSec = 0;
         }
-
         const resume = await Library.findOne({ chapter: chapter.id, type: "RESUME", user: entity });
         if(resume){
             subscription.ResumeStatus = (resume.status) ? resume.status : false;

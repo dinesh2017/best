@@ -15,10 +15,10 @@ const storySchema = mongoose.Schema({
         type: String,
     },
     ageFrom: {
-        type: String,
+        type: Number,
     },
     ageTo: {
-        type: String,
+        type: Number,
     },
     category: {
         type: Schema.Types.ObjectId,

@@ -21,7 +21,7 @@ const getLibraries = asyncHandler(async (req, res, next) => {
 
 const createLibrary = asyncHandler(async (req, res, next) => {
     try {
-        const { story, chapter, time,timeInSec, type, status } = req.body;
+        const { story, chapter, time,timeInSec, timeInSecTotal, type, status } = req.body;
         let { entity } = req.user
         if (!story && !chapter) {
             next(new APIError({ message: "Please enter required fields", status: 400 }));
@@ -39,7 +39,7 @@ const createLibrary = asyncHandler(async (req, res, next) => {
             if(type == "BOOKMARK"){
                 _library = { status, time, timeInSec }
             }else if(type == "RESUME"){
-                _library = { status, time, timeInSec }
+                _library = { status, time, timeInSec, timeInSecTotal }
             }else{
                 _library = { status }
             }
@@ -55,7 +55,7 @@ const createLibrary = asyncHandler(async (req, res, next) => {
             if(type == "BOOKMARK"){
                 lib = { story, chapter, status, time, timeInSec, type, user: entity }
             }else if(type == "RESUME"){
-                lib = { story, chapter,status, time, timeInSec, type, user: entity }
+                lib = { story, chapter,status, time, timeInSec, timeInSecTotal, type, user: entity }
             }else{
                 lib = { story, chapter,status, type, user: entity }
             }

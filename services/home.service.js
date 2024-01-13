@@ -1,5 +1,6 @@
 const Home = require("../models/home.model");
 const Slides = require("../models/slides.model");
+const Profile = require("../models/profile.model");
 const Notification = require("../models/notification.model");
 const User = require("../models/auth/user.model");
 const Story = require("../models/story.model");
@@ -106,12 +107,13 @@ exports.getHomeData = asyncHandler(async (req, res, next) => {
         let options = omitBy({}, isNil);
         let stories = [];
         if (home.StoryTypes != "") {
-            const currentProfile = Profile.findOne({ user: entity, activeProfile: true });
+            const currentProfile = await Profile.findOne({ createdBy: entity, activeProfile: true });
             let options = {};
-            if (!currentProfile)
-                options = { tags: { $in: home.StoryTypes } };
-            else
-                options = { tags: { $in: home.StoryTypes }, ageFrom: { $gte: currentProfile.age }, ageTo: { $lte: currentProfile.age } };
+            if(home.StoryTypes != "All"){
+                options = { tags: { $in: home.StoryTypes } };   
+            }
+            if (currentProfile)
+                options = {...options, ageFrom: { $lte: currentProfile.age }, ageTo: { $gte: currentProfile.age } };
             
             stories = await Story.find(options).select("name image.path description").limit(10);
         }

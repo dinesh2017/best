@@ -3,6 +3,7 @@ const Admin = require("../models/auth/admin.model");
 const User = require("../models/auth/user.model");
 const Subscriber = require("../models/subscriber.model");
 const Subscription = require("../models/subscription.model");
+const Library = require("../models/library.model");
 const Profile = require("../models/profile.model");
 const Story = require("../models/story.model");
 const bcrypt = require("bcrypt");
@@ -56,6 +57,7 @@ const geUserDetails = asyncHandler(async (req, res) => {
         let profile ={
             name: x.name,
             age: x.age,
+            gender:x.gender,
             coverImage: (x.picture)?req.protocol + "://" + req.get('host')  + x.picture.path:"",
             lastaccess: "N/A"
         }
@@ -66,10 +68,23 @@ const geUserDetails = asyncHandler(async (req, res) => {
         path:"subscription",
         select:"name duration price"
     }).populate("orderId price paymentStatus createdAt discount total activePlan");
+
+    const TotalSpending = await Library.getUserSpendingDataByMonth();
+    const SpendingTime = [];
+    if(TotalSpending.length){
+        TotalSpending.map((x)=>{
+            
+            SpendingTime.push((x.spendingTime != 0)?Math.round(x.spendingTime/60):0)
+        })
+    }
     const FinishedStories = 0;
     const LearningHours = 0;
     const AchievedSkills = 0;
-    const SpendingTime = [0,0,0,0,0,0,0,0,0,0,0,0]
+    
+    
+    const favorites = await Library.find({type:"FAVORITE", user:user.id, status:true}).populate("story chapter","name");
+    const resumes = await Library.find({type:"RESUME", user:user.id, status:true}).populate("story chapter","name");
+    const bookmarks = await Library.find({type:"BOOKMARKS", user:user.id, status:true}).populate("story chapter","name");
     res.status(200).json({
         status: 200,
         message: "SUCCESS",
@@ -81,7 +96,11 @@ const geUserDetails = asyncHandler(async (req, res) => {
             FinishedStories,
             LearningHours,
             AchievedSkills,
-            SpendingTime
+            SpendingTime,
+            favorites,
+            resumes,
+            bookmarks,
+            
         }
         
     });
