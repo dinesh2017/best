@@ -16,11 +16,15 @@ exports.getChaptersByStory = asyncHandler(async (req, res, next) => {
         const { chapters, count, pages } = await Chapter.list(req.query);
         let modifiedChapters = await Promise.all(chapters.map(async (x)=>{
             x.audioFile = getAudio(x)//;req.protocol + "://" + req.get('host') + "/chapter/getaduio/" + x.id;
-            const {ResumeStatus, ResumeTime, ResumeTimeInSec , timeInSecTotal} = await getResumeData(x, entity);
+            const {ResumeStatus, ResumeTime, ResumeTimeInSec , timeInSecTotal, BookMarkStatus, time, timeInSec, status} = await getResumeData(x, entity);
             x.ResumeStatus = ResumeStatus;
             x.ResumeTime = ResumeTime;
             x.ResumeTimeInSec = ResumeTimeInSec;
             x.timeInSecTotal = timeInSecTotal;
+            x.BookMarkStatus = BookMarkStatus;
+            x.time = time;
+            x.timeInSec = timeInSec;
+            x.status = status;
             return x;    
         }));
         
@@ -39,6 +43,25 @@ exports.getChaptersByStory = asyncHandler(async (req, res, next) => {
 const getResumeData = async(chapter, entity)=>{
     let ResumeStatus = false;let ResumeTime = "00:00:00";let ResumeTimeInSec = 0;let timeInSecTotal =0;
     const resume = await Library.findOne({ chapter: chapter.id, type: "RESUME", user: entity });
+    const library = await Library.findOne({ chapter: chapter.id, type: "FAVORITE", user: entity });
+    const boomark = await Library.findOne({ chapter: chapter.id, type: "BOOKMARK", user: entity });
+    let status = false;let BookMarkStatus = false; let time = "00:00:00"; let timeInSec = 0;
+    if (library)
+        status = (library.status) ? library.status : false;
+    else
+        status = false;
+
+    if (boomark){
+        BookMarkStatus = (boomark.status) ? boomark.status : false;
+        time = (boomark.time)?boomark.time:"00:00:00";
+        timeInSec = (boomark.timeInSec)?boomark.timeInSec:"0";
+    }
+    else{
+        BookMarkStatus = false;
+        time = "00:00:00";
+        timeInSec = 0;
+    }
+
     if(resume){
         ResumeStatus = (resume.status) ? resume.status : false;
         ResumeTime = (resume.time)?resume.time:"00:00:00";
@@ -47,11 +70,10 @@ const getResumeData = async(chapter, entity)=>{
     }else{
         ResumeStatus = false;
         ResumeTime = "00:00:00";
-        timeInSecTotal = 0;
         ResumeTimeInSec = 0;
+        timeInSecTotal = 0;
     }
-    console.log(ResumeStatus)
-    return {ResumeStatus, ResumeTime, ResumeTimeInSec , timeInSecTotal};
+    return {ResumeStatus, ResumeTime, ResumeTimeInSec , timeInSecTotal, BookMarkStatus, time, timeInSec, status};
 }
 
 exports.getChatpterById = asyncHandler(async (req, res, next) => {

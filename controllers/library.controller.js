@@ -2,16 +2,33 @@ const asyncHandler = require("express-async-handler");
 const Library = require("../models/library.model");
 const Chapter = require("../models/chapter.model");
 const APIError = require('../utils/APIError');
+const { getAudio } = require("../config/audioConfig");
 
 const getLibraries = asyncHandler(async (req, res, next) => {
     try {
         let { entity } = req.user;
         req.query.user = entity;
         const { libraries, count, pages } = await Library.list(req.query);
+        let modifiedLibrary = await Promise.all(libraries.map(async (x)=>{
+            const chapter = await Chapter.get(x.chapter)
+            x.audioFile = getAudio(chapter)
+            const bookmark = await Library.findOne({ chapter: x.chapter, type: "BOOKMARK", user: entity });
+            if (bookmark){
+                x.BookMarkStatus = (bookmark.status) ? bookmark.status : false;
+                x.time = (bookmark.time)?bookmark.time:"00:00:00";
+                x.timeInSec = (bookmark.timeInSec)?bookmark.timeInSec:"0";
+            }
+            else{
+                x.BookMarkStatus = false;
+                x.time = "00:00:00";
+                x.timeInSec = 0;
+            }
+            return x;    
+        }));
         res.status(200).json({
             status: 200,
             message: "SUCCESS",
-            libraries: libraries,
+            libraries: modifiedLibrary,
             count, pages
         });
     } catch (error) {
