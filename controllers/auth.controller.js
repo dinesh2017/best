@@ -239,6 +239,7 @@ exports.login = asyncHandler(async (req, res, next) => {
         }
         
     } catch (err) {
+        console.log(err)
         return next(new APIError({ message: `Login Failed` }));
     }
 

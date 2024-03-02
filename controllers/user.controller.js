@@ -85,15 +85,24 @@ const updateUser = asyncHandler(async (req, res) => {
     res.status(200).json(updatedUser);
 })
 
-const deleteUser = asyncHandler(async (req, res) => {
-    const user = await User.findById(req.params.id);
-    console.log(user)
-    if (!user) {
-        res.status(404);
-        throw new Error("User not found")
+
+const deleteUser = asyncHandler(async (req, res, next) => {
+    try {
+        const user = await User.findById(req.params.id);
+        if (!user) {
+            next(new APIError({ message: "Category not found", status: 200 }));
+        }
+        let _user = await User.findByIdAndDelete(user.id)
+        res.status(200).json({
+            status: 200,
+            user: _user,
+            message: "SUCCESS",
+        });
+    } catch (error) {
+        next(new APIError(error));
     }
-    await User.remove();
-    res.status(200).json(user);
+
 })
+
 
 module.exports = { getUsers, getUser, createUser, updateUser, deleteUser, getUserInfo, uploadProfilePic }

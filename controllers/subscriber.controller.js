@@ -41,7 +41,7 @@ const getSubscriber = asyncHandler(async (req, res, next) => {
 
 const createSubscriber = asyncHandler(async (req, res, next) => {
     try {
-        
+
         const { orderId, subscription, price, discount, total, orderDate, paymentStatus, coupan } = req.body;
         
         let { entity } = req.user;
@@ -51,8 +51,8 @@ const createSubscriber = asyncHandler(async (req, res, next) => {
         const subscription_ = await Subscription.findById(subscription);
 
         await Subscriber.updateMany({ user: entity }, { activePlan: 0 });
-
-        let expiryDate = addDays(orderDate, (subscription_.duration * 30));
+        let createdDate = new Date();
+        let expiryDate = addDays(createdDate, (subscription_.duration * 30));
         const subscriber = await Subscriber.create({ orderId, subscription, price, discount,expiryDate, user:entity, total, orderDate, paymentStatus, coupan });
         res.status(200).json({
             status: 200,
